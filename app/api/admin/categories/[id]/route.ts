@@ -5,64 +5,55 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const supabaseAdmin = getSupabaseAdmin();
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(request: NextRequest) {
+  const { error: authError } = await requireAdmin(request);
+  if (authError) return authError;
+
+  const { data, error } = await supabaseAdmin
+    .from('categories')
+    .select('*, parent:categories!parent_id(id, name, slug)')
+    .order('display_order', { ascending: true });
+
+  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true, data });
+}
+
+export async function POST(request: NextRequest) {
   const { error: authError } = await requireAdmin(request);
   if (authError) return authError;
 
   const body = await request.json();
-  const updates: Record<string, any> = {};
-
-  if (body.name !== undefined) updates.name = body.name.trim();
-  if (body.slug !== undefined) updates.slug = toSlug(body.slug);
-  if (body.parent_id !== undefined) updates.parent_id = body.parent_id;
-  if (body.image_url !== undefined) updates.image_url = body.image_url;
-  if (body.display_order !== undefined) updates.display_order = body.display_order;
-
-  const { data, error } = await supabaseAdmin.from('categories').update(updates).eq('id', id).select().single();
-
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 400 });
-  if (!data) return NextResponse.json({ success: false, error: 'Category not found' }, { status: 404 });
-
-  return NextResponse.json({ success: true, data });
-}
-
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const { error: authError } = await requireAdmin(request);
-  if (authError) return authError;
-
-  // Check if any products use this category
-  const { count: productCount } = await supabaseAdmin
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('category_id', id);
-
-  if (productCount && productCount > 0) {
-    return NextResponse.json(
-      { success: false, error: `Cannot delete: ${productCount} product(s) use this category. Reassign them first.` },
-      { status: 400 },
-    );
+  if (!body.name) {
+    return NextResponse.json({ success: false, error: 'name is required' }, { status: 400 });
   }
 
-  // Check if any subcategories reference this as parent
-  const { count: childCount } = await supabaseAdmin
+  const slug = body.slug ? toSlug(body.slug) : toSlug(body.name);
+
+  const { data: last } = await supabaseAdmin
     .from('categories')
-    .select('*', { count: 'exact', head: true })
-    .eq('parent_id', id);
+    .select('display_order')
+    .order('display_order', { ascending: false })
+    .limit(1)
+    .single();
 
-  if (childCount && childCount > 0) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: `Cannot delete: ${childCount} subcategory(ies) reference this category. Delete or reassign them first.`,
-      },
-      { status: 400 },
-    );
+  const display_order = (last?.display_order ?? 0) + 1;
+
+  const { data, error } = await supabaseAdmin
+    .from('categories')
+    .insert({
+      name: body.name.trim(),
+      slug,
+      parent_id: body.parent_id || null,
+      image_url: body.image_url || null,
+      display_order: body.display_order ?? display_order,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    const msg = error.code === '23505' ? 'A category with this slug already exists' : error.message;
+    return NextResponse.json({ success: false, error: msg }, { status: 400 });
   }
 
-  const { error } = await supabaseAdmin.from('categories').delete().eq('id', id);
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true, data: { deleted: true } });
+  return NextResponse.json({ success: true, data }, { status: 201 });
 }
