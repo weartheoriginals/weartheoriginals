@@ -1,26 +1,96 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --color-ivory: #f7f5f1;
+  --color-espresso: #1c1a17;
+  --color-umber: #4a4038;
+  --color-saddle: #8b5e3c;
+  --color-brass: #c9a876;
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --hairline: rgba(28, 26, 23, 0.12);
+}
+:root {
+  --hairline: rgba(28, 26, 23, 0.12);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-ivory);
+  color: var(--color-espresso);
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+
+.font-mono-label {
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+}
+
+.stitch-divider {
+  border: none;
+  border-top: 1.5px dashed var(--hairline);
+  height: 0;
+}
+
+.stitch-underline {
+  position: relative;
+  text-decoration: none;
+}
+.stitch-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 0;
+  border-top: 1.5px dashed currentColor;
+  opacity: 0;
+  transform: translateY(2px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.stitch-underline:hover::after,
+.stitch-underline:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.shelf-scroll {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.shelf-scroll::-webkit-scrollbar {
+  display: none;
+}
+.shelf-item {
+  scroll-snap-align: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-saddle);
+  outline-offset: 3px;
 }
