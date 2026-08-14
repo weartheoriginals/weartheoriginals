@@ -1,3 +1,6 @@
+'use client';
+
+import { useCart } from '@/lib/cart-context';
 import Link from 'next/link';
 
 const NAV_LINKS = [
@@ -8,6 +11,8 @@ const NAV_LINKS = [
 ];
 
 export default function SiteHeader() {
+  const { itemCount } = useCart();
+
   return (
     <header className="sticky top-0 z-40 bg-ivory/90 backdrop-blur-sm border-b border-espresso/10">
       <div className="mx-auto max-w-350 px-6 md:px-10">
@@ -41,7 +46,7 @@ export default function SiteHeader() {
               aria-label="View cart"
               className="font-mono-label text-[11px] uppercase text-umber hover:text-espresso stitch-underline"
             >
-              Cart (0)
+              Cart ({itemCount})
             </Link>
           </div>
         </div>
