@@ -82,7 +82,7 @@ export default function AdminDashboard() {
             <Link
               key={action.href}
               href={action.href}
-              className="flex items-center justify-between px-3 py-3 border border-transparent hover:border-[var(--hairline)] transition-colors"
+              className="flex items-center justify-between px-3 py-3 border border-transparent hover:border-(--hairline) transition-colors"
             >
               <div>
                 <p className="text-sm text-espresso">{action.label}</p>
