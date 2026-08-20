@@ -48,7 +48,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { error: authError } = await requireAdmin(request);
   if (authError) return authError;
 
-  // product_images and product_variants CASCADE delete automatically
   const { error } = await supabaseAdmin.from('products').delete().eq('id', id);
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
 

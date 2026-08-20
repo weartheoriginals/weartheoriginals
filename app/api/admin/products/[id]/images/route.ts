@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const supabaseAdmin = getSupabaseAdmin();
 
-// GET all images for a product
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { error: authError } = await requireAdmin(request);
@@ -20,7 +19,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json({ success: true, data });
 }
 
-// POST — add an image (upload already done client-side to Storage; this just registers the row)
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { error: authError } = await requireAdmin(request);
@@ -31,7 +29,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ success: false, error: 'image_url is required' }, { status: 400 });
   }
 
-  // If this image is marked primary, unset any existing primary for this product first
   if (body.is_primary) {
     await supabaseAdmin.from('product_images').update({ is_primary: false }).eq('product_id', id);
   }
@@ -61,7 +58,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   return NextResponse.json({ success: true, data }, { status: 201 });
 }
 
-// DELETE — remove a single image by image id (?image_id=...)
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { error: authError } = await requireAdmin(request);
@@ -73,7 +69,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: false, error: 'image_id query param is required' }, { status: 400 });
   }
 
-  // Any variants pointing to this image get image_id set to NULL automatically (ON DELETE SET NULL)
   const { error } = await supabaseAdmin.from('product_images').delete().eq('id', image_id).eq('product_id', id);
 
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
