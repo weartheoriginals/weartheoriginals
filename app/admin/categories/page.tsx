@@ -1,8 +1,8 @@
 'use client';
 
-import { supabaseClient } from '@/lib/supabase';
-import { uploadToProductImagesBucket } from '@/lib/upload-image';
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import type { CategoryWithParent } from '@/lib/types';
+import { uploadToProductImagesBucket } from '@/lib/upload-image';
 import { useEffect, useState } from 'react';
 
 type ModalMode = 'add' | 'edit' | null;
@@ -10,9 +10,10 @@ type ModalMode = 'add' | 'edit' | null;
 const emptyForm = { name: '', slug: '', parent_id: '', image_url: '' };
 
 async function authHeaders() {
+  const supabase = createSupabaseBrowserClient();
   const {
     data: { session },
-  } = await supabaseClient.auth.getSession();
+  } = await supabase.auth.getSession();
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${session?.access_token}`,
