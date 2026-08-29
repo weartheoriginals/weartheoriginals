@@ -247,12 +247,18 @@ export default function AdminProductsPage() {
 
   async function handleSetPrimary(imageId: string) {
     if (!editingProduct) return;
+    setError('');
     const headers = await authHeaders();
-    // Re-post is not supported for updates; primary flag is set via a fresh POST only on create,
-    // so toggle locally + persist by deleting and re-adding is overkill — instead just update flags client-side
-    // is not possible without a PATCH-style route. Simplest correct option: call POST's is_primary reset path
-    // is unavailable here, so we surface this as not-yet-supported rather than silently doing nothing wrong.
-    setError('Changing the primary image after upload isn\u2019t supported yet — delete and re-upload in order.');
+    const res = await fetch(`/api/admin/products/${editingProduct.id}/images?image_id=${imageId}`, {
+      method: 'PUT',
+      headers,
+    });
+    const data = await res.json();
+    if (!data.success) {
+      setError(data.error);
+      return;
+    }
+    setImages(prev => prev.map(img => ({ ...img, is_primary: img.id === imageId })));
   }
 
   async function handleDeleteImage(imageId: string) {
@@ -657,12 +663,16 @@ export default function AdminProductsPage() {
                             Primary
                           </span>
                         )}
-                        <button
-                          onClick={() => handleDeleteImage(img.id)}
-                          className="absolute inset-0 bg-black/50 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                        >
-                          Delete
-                        </button>
+                        <div className="absolute inset-0 bg-black/50 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                          {!img.is_primary && (
+                            <button onClick={() => handleSetPrimary(img.id)} className="hover:underline">
+                              Set as Primary
+                            </button>
+                          )}
+                          <button onClick={() => handleDeleteImage(img.id)} className="hover:underline">
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     ))}
                     <label
@@ -682,7 +692,7 @@ export default function AdminProductsPage() {
                     </label>
                   </div>
                   <p className="text-xs text-umber/70">
-                    The first image uploaded is set as primary. Delete and re-upload in order to change it.
+                    The first image uploaded is set as primary. Hover an image to set it as primary or delete it.
                   </p>
                 </div>
               )}
