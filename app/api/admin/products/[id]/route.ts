@@ -34,6 +34,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.price !== undefined) updates.price = parseFloat(body.price);
   if (body.is_featured !== undefined) updates.is_featured = body.is_featured;
   if (body.is_active !== undefined) updates.is_active = body.is_active;
+  if (body.brand_name !== undefined) updates.brand_name = body.brand_name?.trim() || null;
+  if (body.materials !== undefined) updates.materials = body.materials?.trim() || null;
+  if (body.features !== undefined)
+    updates.features = Array.isArray(body.features) ? body.features.filter((f: string) => f.trim()) : null;
+  if (body.processing_days_min !== undefined)
+    updates.processing_days_min = body.processing_days_min === null ? null : parseInt(body.processing_days_min);
+  if (body.processing_days_max !== undefined)
+    updates.processing_days_max = body.processing_days_max === null ? null : parseInt(body.processing_days_max);
+  if (body.return_policy !== undefined) updates.return_policy = body.return_policy?.trim() || null;
+  if (body.shipping_from !== undefined) updates.shipping_from = body.shipping_from?.trim() || null;
+  if (body.free_delivery !== undefined) updates.free_delivery = body.free_delivery;
 
   const { data, error } = await supabaseAdmin.from('products').update(updates).eq('id', id).select().single();
 

@@ -54,6 +54,14 @@ export async function POST(request: NextRequest) {
       price: parseFloat(body.price),
       is_featured: body.is_featured ?? false,
       is_active: body.is_active ?? true,
+      brand_name: body.brand_name?.trim() || null,
+      materials: body.materials?.trim() || null,
+      features: Array.isArray(body.features) ? body.features.filter((f: string) => f.trim()) : null,
+      processing_days_min: body.processing_days_min !== undefined ? parseInt(body.processing_days_min) : null,
+      processing_days_max: body.processing_days_max !== undefined ? parseInt(body.processing_days_max) : null,
+      return_policy: body.return_policy?.trim() || null,
+      shipping_from: body.shipping_from?.trim() || null,
+      free_delivery: body.free_delivery ?? true,
     })
     .select()
     .single();
