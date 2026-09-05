@@ -2,49 +2,28 @@ import EditorialBlock from '@/components/editorial-block';
 import Hero from '@/components/hero';
 import { ProductCardData } from '@/components/product-card';
 import ProductShelf from '@/components/product-shelf';
+import { getFeaturedProducts } from '@/lib/queries/products';
+import type { ProductWithImages } from '@/lib/types';
+import { getProductImageUrl, PLACEHOLDER_IMAGE } from '@/lib/utils';
 
-// TODO: replace with a real fetch to /api/products?is_featured=true
-// Shape matches the `products` table joined with primary product_images + price.
-const FEATURED_PRODUCTS: ProductCardData[] = [
-  {
-    slug: 'harrington-tan-bomber',
-    name: 'Harrington Bomber',
-    price: 480,
-    imageUrl: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=800&auto=format&fit=crop',
-    tag: 'New',
-  },
-  {
-    slug: 'waxed-field-coat-espresso',
-    name: 'Waxed Field Coat',
-    price: 620,
-    imageUrl: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?q=80&w=800&auto=format&fit=crop',
-  },
-  {
-    slug: 'satchel-saddle-tan',
-    name: 'The Fieldnote Satchel',
-    price: 340,
-    imageUrl: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?q=80&w=800&auto=format&fit=crop',
-    tag: 'Limited Stock',
-  },
-  {
-    slug: 'moto-jacket-black',
-    name: 'Moto Jacket',
-    price: 560,
-    imageUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=800&auto=format&fit=crop',
-  },
-  {
-    slug: 'weekender-duffel',
-    name: 'Weekender Duffel',
-    price: 410,
-    imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=800&auto=format&fit=crop',
-  },
-];
+function toProductCardData(product: ProductWithImages): ProductCardData {
+  const primaryImage = product.images.find(img => img.is_primary) ?? product.images[0];
+  return {
+    slug: product.slug,
+    name: product.name,
+    price: product.price,
+    imageUrl: primaryImage ? getProductImageUrl(primaryImage.image_url) : PLACEHOLDER_IMAGE,
+  };
+}
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredProducts = await getFeaturedProducts(8);
+  const cardProducts = featuredProducts.map(toProductCardData);
+
   return (
     <main>
       <Hero />
-      <ProductShelf eyebrow="Just In" title="Featured This Season" products={FEATURED_PRODUCTS} />
+      <ProductShelf eyebrow="Just In" title="Featured This Season" products={cardProducts} />
       <EditorialBlock
         eyebrow="The Atelier"
         title="Cut and stitched by hand, one hide at a time."
@@ -64,7 +43,7 @@ export default function HomePage() {
         imageAlt="Rolls of vegetable-tanned leather in tan and espresso tones"
         reverse
       />
-      <ProductShelf eyebrow="Carry" title="Bags & Accessories" products={FEATURED_PRODUCTS.slice(2)} />
+      <ProductShelf eyebrow="Carry" title="Bags & Accessories" products={cardProducts.slice(2)} />
     </main>
   );
 }

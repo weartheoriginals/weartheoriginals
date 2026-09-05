@@ -32,6 +32,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.parent_id !== undefined) updates.parent_id = body.parent_id || null;
   if (body.image_url !== undefined) updates.image_url = body.image_url || null;
   if (body.display_order !== undefined) updates.display_order = body.display_order;
+  if (body.hero_copy !== undefined) updates.hero_copy = body.hero_copy?.trim() || null;
+  if (body.hero_image_alt !== undefined) updates.hero_image_alt = body.hero_image_alt?.trim() || null;
 
   const { data, error } = await supabaseAdmin.from('categories').update(updates).eq('id', id).select().single();
 

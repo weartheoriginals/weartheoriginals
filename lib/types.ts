@@ -6,6 +6,8 @@ export interface Category {
   image_url: string | null;
   display_order: number;
   created_at: string;
+  hero_copy: string | null;
+  hero_image_alt: string | null;
 }
 
 export interface CategoryWithParent extends Category {

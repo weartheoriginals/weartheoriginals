@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
       parent_id: body.parent_id || null,
       image_url: body.image_url || null,
       display_order: body.display_order ?? display_order,
+      hero_copy: body.hero_copy?.trim() || null,
+      hero_image_alt: body.hero_image_alt?.trim() || null,
     })
     .select()
     .single();

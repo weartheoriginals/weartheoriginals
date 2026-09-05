@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 
 type ModalMode = 'add' | 'edit' | null;
 
-const emptyForm = { name: '', slug: '', parent_id: '', image_url: '' };
+const emptyForm = { name: '', slug: '', parent_id: '', image_url: '', hero_copy: '', hero_image_alt: '' };
 
 async function authHeaders() {
   const supabase = createSupabaseBrowserClient();
@@ -75,7 +75,14 @@ export default function AdminCategoriesPage() {
   }
 
   function openEdit(cat: CategoryWithParent) {
-    setForm({ name: cat.name, slug: cat.slug, parent_id: cat.parent_id ?? '', image_url: cat.image_url ?? '' });
+    setForm({
+      name: cat.name,
+      slug: cat.slug,
+      parent_id: cat.parent_id ?? '',
+      image_url: cat.image_url ?? '',
+      hero_copy: cat.hero_copy ?? '',
+      hero_image_alt: cat.hero_image_alt ?? '',
+    });
     setEditingCat(cat);
     setError('');
     setImageFile(null);
@@ -129,6 +136,8 @@ export default function AdminCategoriesPage() {
       slug: form.slug.trim(),
       parent_id: form.parent_id || null,
       image_url,
+      hero_copy: form.hero_copy.trim() || null,
+      hero_image_alt: form.hero_image_alt.trim() || null,
     };
 
     const headers = await authHeaders();
@@ -340,6 +349,30 @@ export default function AdminCategoriesPage() {
                     ✕ Remove image
                   </button>
                 )}
+              </div>
+
+              <div>
+                <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">Hero Copy</label>
+                <textarea
+                  value={form.hero_copy}
+                  onChange={e => setForm(f => ({ ...f, hero_copy: e.target.value }))}
+                  placeholder="Paragraph shown on the category page banner"
+                  rows={4}
+                  className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle resize-y"
+                />
+              </div>
+
+              <div>
+                <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">
+                  Hero Image Alt Text
+                </label>
+                <input
+                  type="text"
+                  value={form.hero_image_alt}
+                  onChange={e => setForm(f => ({ ...f, hero_image_alt: e.target.value }))}
+                  placeholder="Describes the hero image for accessibility"
+                  className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
+                />
               </div>
             </div>
 
