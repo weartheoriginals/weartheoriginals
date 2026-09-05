@@ -5,11 +5,13 @@ import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 export type CartItem = {
   lineId: string;
   slug: string;
+  product_id: string;
   name: string;
   price: number;
   imageUrl: string;
   quantity: number;
   customizations: Record<string, string>;
+  variantIds: string[];
 };
 
 type AddItemInput = Omit<CartItem, 'lineId' | 'quantity'> & { quantity?: number };
