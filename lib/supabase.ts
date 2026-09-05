@@ -15,3 +15,9 @@ export function getSupabaseAdmin() {
     auth: { persistSession: false },
   });
 }
+
+// Server-side, no session/cookies — for public reads in Server Components.
+// Uses anon key, respects RLS (unlike getSupabaseAdmin).
+export function getSupabasePublic() {
+  return createClient(supabaseUrl, supabaseAnonKey);
+}

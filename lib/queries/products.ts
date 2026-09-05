@@ -1,8 +1,9 @@
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import type { ProductWithDetails, ProductWithImages } from '@/lib/types';
+import { getSupabasePublic } from '../supabase';
 
 export async function getFeaturedProducts(limit = 8): Promise<ProductWithImages[]> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = getSupabasePublic();
 
   const { data, error } = await supabase
     .from('products')
@@ -20,7 +21,7 @@ export async function getFeaturedProducts(limit = 8): Promise<ProductWithImages[
 }
 
 export async function getProductsByCategorySlug(categorySlug: string): Promise<ProductWithImages[]> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = getSupabasePublic();
 
   const { data: category, error: categoryError } = await supabase
     .from('categories')

@@ -1,100 +1,62 @@
 import { ProductCardData } from '@/components/product-card';
-import ProductDetailPanel, { CustomizationOption } from '@/components/product-detail-panel';
+import ProductDetailPanel from '@/components/product-detail-panel';
 import ProductGallery from '@/components/product-gallery';
 import ProductShelf from '@/components/product-shelf';
+import { getProductBySlug, getRelatedProducts } from '@/lib/queries/products';
+import type { ProductWithImages } from '@/lib/types';
+import { getProductImageUrl, PLACEHOLDER_IMAGE } from '@/lib/utils';
 import { notFound } from 'next/navigation';
 
-type ProductDetail = {
-  slug: string;
-  name: string;
-  price: number;
-  description: string;
-  images: string[];
-  customizations: CustomizationOption[];
-};
-
-const PRODUCTS: Record<string, ProductDetail> = {
-  'moto-jacket-black': {
-    slug: 'moto-jacket-black',
-    name: 'Moto Jacket',
-    price: 560,
-    description:
-      'Cut close through the body with an asymmetric zip and a collar that softens with wear. Full-grain leather, finished by hand — this is a jacket built to be lived in, not preserved.',
-    images: [
-      'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1200&auto=format&fit=crop',
-    ],
-    customizations: [
-      { label: 'Handle', choices: ['Tan', 'Espresso', 'Black'] },
-      { label: 'Flap', choices: ['Structured', 'Soft'] },
-      { label: 'Body', choices: ['Full-Grain', 'Suede'] },
-    ],
-  },
-};
-
-const RELATED_PRODUCTS: ProductCardData[] = [
-  {
-    slug: 'harrington-tan-bomber',
-    name: 'Harrington Bomber',
-    price: 480,
-    imageUrl: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=800&auto=format&fit=crop',
-    tag: 'New',
-  },
-  {
-    slug: 'shearling-trucker',
-    name: 'Shearling Trucker',
-    price: 690,
-    imageUrl: 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop',
-    tag: 'Limited Stock',
-  },
-  {
-    slug: 'suede-bomber-olive',
-    name: 'Suede Bomber',
-    price: 520,
-    imageUrl: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=800&auto=format&fit=crop',
-  },
-  {
-    slug: 'weekender-duffel',
-    name: 'Weekender Duffel',
-    price: 410,
-    imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=800&auto=format&fit=crop',
-  },
-];
-
-export function generateStaticParams() {
-  return Object.keys(PRODUCTS).map(slug => ({ slug }));
+function toProductCardData(product: ProductWithImages): ProductCardData {
+  const primaryImage = product.images.find(img => img.is_primary) ?? product.images[0];
+  return {
+    slug: product.slug,
+    name: product.name,
+    price: product.price,
+    imageUrl: primaryImage ? getProductImageUrl(primaryImage.image_url) : PLACEHOLDER_IMAGE,
+  };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = PRODUCTS[slug];
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
+  const sortedImages = [...product.images].sort((a, b) => {
+    if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+    return a.display_order - b.display_order;
+  });
+  const galleryImages =
+    sortedImages.length > 0 ? sortedImages.map(img => getProductImageUrl(img.image_url)) : [PLACEHOLDER_IMAGE];
+
+  const relatedProducts = product.category_id
+    ? (await getRelatedProducts(product.category_id, product.id)).map(toProductCardData)
+    : [];
+
   return (
     <main>
       <section className="mx-auto max-w-350 px-6 md:px-10 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
-          <ProductGallery images={product.images} productName={product.name} />
+          <ProductGallery images={galleryImages} productName={product.name} />
           <ProductDetailPanel
+            productId={product.id}
             slug={product.slug}
             name={product.name}
             price={product.price}
-            description={product.description}
-            imageUrl={product.images[0]}
-            customizations={product.customizations}
+            description={product.description ?? ''}
+            imageUrl={galleryImages[0]}
+            variants={product.variants}
           />
         </div>
       </section>
-
-      <div className="border-t border-espresso/10">
-        <ProductShelf eyebrow="You May Also Like" title="Complete the Look" products={RELATED_PRODUCTS} />
-      </div>
+      {relatedProducts.length > 0 && (
+        <div className="border-t border-espresso/10">
+          <ProductShelf eyebrow="You May Also Like" title="Complete the Look" products={relatedProducts} />
+        </div>
+      )}
     </main>
   );
 }

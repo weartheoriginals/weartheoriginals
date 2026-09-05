@@ -1,8 +1,9 @@
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import type { Category } from '@/lib/types';
+import { getSupabasePublic } from '../supabase';
 
 export async function getAllCategories(): Promise<Category[]> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = getSupabasePublic();
 
   const { data, error } = await supabase.from('categories').select('*').order('display_order', { ascending: true });
 
@@ -14,7 +15,7 @@ export async function getAllCategories(): Promise<Category[]> {
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = getSupabasePublic();
 
   const { data, error } = await supabase.from('categories').select('*').eq('slug', slug).single();
 

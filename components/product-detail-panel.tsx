@@ -1,12 +1,9 @@
 'use client';
 
 import { useCart } from '@/lib/cart-context';
-import { useState } from 'react';
-
-export type CustomizationOption = {
-  label: string;
-  choices: string[];
-};
+import type { ProductVariant } from '@/lib/types';
+import { getSelectionStock, groupVariants, isSelectionComplete, resolveVariantIds } from '@/lib/variant-helpers';
+import { useMemo, useState } from 'react';
 
 function formatPrice(amount: number) {
   return new Intl.NumberFormat('en-US', {
@@ -17,32 +14,60 @@ function formatPrice(amount: number) {
 }
 
 export default function ProductDetailPanel({
+  productId,
   slug,
   name,
   price,
   description,
   imageUrl,
-  customizations,
+  variants,
 }: {
+  productId: string;
   slug: string;
   name: string;
   price: number;
   description: string;
   imageUrl: string;
-  customizations: CustomizationOption[];
+  variants: ProductVariant[];
 }) {
   const { addItem } = useCart();
+  const grouped = useMemo(() => groupVariants(variants), [variants]);
+  const attributeNames = Object.keys(grouped);
+
   const [selections, setSelections] = useState<Record<string, string>>(() =>
-    Object.fromEntries(customizations.map(option => [option.label, option.choices[0]])),
+    Object.fromEntries(attributeNames.map(attributeName => [attributeName, grouped[attributeName][0].attribute_value])),
   );
   const [added, setAdded] = useState(false);
+  const [selectionError, setSelectionError] = useState('');
 
-  function handleSelect(label: string, choice: string) {
-    setSelections(prev => ({ ...prev, [label]: choice }));
+  function handleSelect(attributeName: string, value: string) {
+    setSelections(prev => ({ ...prev, [attributeName]: value }));
+    setSelectionError('');
   }
 
+  const stock = attributeNames.length > 0 ? getSelectionStock(variants, selections) : null;
+  const outOfStock = stock !== null && stock <= 0;
+
   function handleAddToBag() {
-    addItem({ slug, name, price, imageUrl, customizations: selections });
+    if (attributeNames.length > 0) {
+      if (!isSelectionComplete(grouped, selections)) {
+        setSelectionError('Please select an option for every attribute.');
+        return;
+      }
+      const variantIds = resolveVariantIds(variants, selections);
+      if (!variantIds) {
+        setSelectionError('That combination is not available.');
+        return;
+      }
+      if (outOfStock) {
+        setSelectionError('That combination is out of stock.');
+        return;
+      }
+      addItem({ product_id: productId, slug, name, price, imageUrl, customizations: selections, variantIds });
+    } else {
+      addItem({ product_id: productId, slug, name, price, imageUrl, customizations: {}, variantIds: [] });
+    }
+
     setAdded(true);
     setTimeout(() => setAdded(false), 2200);
   }
@@ -54,39 +79,43 @@ export default function ProductDetailPanel({
 
       <p className="mt-6 text-umber leading-relaxed max-w-md">{description}</p>
 
-      {customizations.length > 0 && (
+      {attributeNames.length > 0 && (
         <div className="mt-8 border-t border-espresso/10 pt-8">
           <p className="font-mono-label text-[11px] uppercase text-brass mb-5">Customise This Item</p>
           <div className="space-y-5">
-            {customizations.map(option => (
-              <div key={option.label} className="flex items-center justify-between border-b border-espresso/10 pb-3">
-                <label htmlFor={`option-${option.label}`} className="font-mono-label text-[11px] uppercase text-umber">
-                  {option.label}
+            {attributeNames.map(attributeName => (
+              <div key={attributeName} className="flex items-center justify-between border-b border-espresso/10 pb-3">
+                <label htmlFor={`option-${attributeName}`} className="font-mono-label text-[11px] uppercase text-umber">
+                  {attributeName}
                 </label>
                 <select
-                  id={`option-${option.label}`}
-                  value={selections[option.label]}
-                  onChange={event => handleSelect(option.label, event.target.value)}
+                  id={`option-${attributeName}`}
+                  value={selections[attributeName]}
+                  onChange={event => handleSelect(attributeName, event.target.value)}
                   className="font-mono-label text-[11px] uppercase text-espresso bg-transparent border-none text-right focus:outline-none focus-visible:underline cursor-pointer"
                 >
-                  {option.choices.map(choice => (
-                    <option key={choice} value={choice}>
-                      {choice}
+                  {grouped[attributeName].map(variant => (
+                    <option key={variant.id} value={variant.attribute_value}>
+                      {variant.attribute_value}
                     </option>
                   ))}
                 </select>
               </div>
             ))}
           </div>
+          {stock !== null && stock > 0 && stock <= 5 && <p className="mt-3 text-xs text-saddle">Only {stock} left</p>}
         </div>
       )}
+
+      {selectionError && <p className="mt-4 text-sm text-red-500">{selectionError}</p>}
 
       <button
         type="button"
         onClick={handleAddToBag}
-        className="mt-8 w-full bg-espresso text-ivory font-mono-label text-[12px] uppercase py-4 hover:bg-umber transition-colors"
+        disabled={outOfStock}
+        className="mt-8 w-full bg-espresso text-ivory font-mono-label text-[12px] uppercase py-4 hover:bg-umber transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {added ? 'Added to Bag' : 'Add to Bag'}
+        {outOfStock ? 'Out of Stock' : added ? 'Added to Bag' : 'Add to Bag'}
       </button>
     </div>
   );
