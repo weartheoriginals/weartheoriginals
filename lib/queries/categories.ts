@@ -1,4 +1,3 @@
-import { createSupabaseServerClient } from '@/lib/supabase-server';
 import type { Category } from '@/lib/types';
 import { getSupabasePublic } from '../supabase';
 
