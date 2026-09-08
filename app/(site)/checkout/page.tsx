@@ -21,6 +21,7 @@ type FormState = {
   address: string;
   city: string;
   postal_code: string;
+  country: string;
   notes: string;
 };
 
@@ -71,6 +72,7 @@ export default function CheckoutPage() {
     phone: '',
     address: '',
     city: '',
+    country: '',
     postal_code: '',
     notes: '',
   });
@@ -97,6 +99,7 @@ export default function CheckoutPage() {
     if (!form.phone.trim()) newErrors.phone = 'Phone number is required';
     if (!form.address.trim()) newErrors.address = 'Address is required';
     if (!form.city.trim()) newErrors.city = 'City is required';
+    if (!form.country.trim()) newErrors.country = 'Country is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -113,19 +116,20 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          first_name: form.first_name.trim(),
-          last_name: form.last_name.trim(),
+          full_name: `${form.first_name.trim()} ${form.last_name.trim()}`.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
-          address: form.address.trim(),
-          city: form.city.trim(),
-          postal_code: form.postal_code.trim(),
-          notes: form.notes.trim(),
-          payment_method: 'bank_transfer',
+          shipping_address: {
+            line1: form.address.trim(),
+            city: form.city.trim(),
+            postal_code: form.postal_code.trim(),
+            country: form.country.trim(),
+          },
+          notes: form.notes.trim() || undefined,
           items: items.map(item => ({
-            slug: item.slug,
+            product_id: item.product_id,
             quantity: item.quantity,
-            customizations: item.customizations,
+            variant_ids: item.variantIds,
           })),
         }),
       });
@@ -139,7 +143,7 @@ export default function CheckoutPage() {
       }
 
       clearCart();
-      router.push(`/order-confirmation?order_number=${data.data.order_number}&order_id=${data.data.order_id}`);
+      router.push(`/order-confirmation?order_id=${data.data.id}`);
     } catch {
       setServerError('Network error. Please check your connection and try again.');
       setPlacing(false);
@@ -239,6 +243,14 @@ export default function CheckoutPage() {
               value={form.postal_code}
               onChange={val => setField('postal_code', val)}
               placeholder="10001"
+            />
+            <Field
+              label="Country"
+              required
+              value={form.country}
+              error={errors.country}
+              onChange={val => setField('country', val)}
+              placeholder="United States"
             />
           </div>
 

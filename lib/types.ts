@@ -113,6 +113,7 @@ export interface CreateOrderInput {
   phone?: string;
   shipping_address: ShippingAddress;
   items: CreateOrderItemInput[];
+  notes?: string;
 }
 
 export interface CreateOrderItemInput {

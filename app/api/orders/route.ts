@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       shipping_address: body.shipping_address,
       status: 'pending',
       total_amount,
+      notes: body.notes?.trim() || null,
     })
     .select()
     .single();
