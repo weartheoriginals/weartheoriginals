@@ -35,7 +35,8 @@ body {
 
 .font-mono-label {
   font-family: var(--font-mono);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+  font-weight: 500;
 }
 
 .stitch-divider {
