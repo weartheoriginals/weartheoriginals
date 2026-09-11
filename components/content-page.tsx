@@ -36,3 +36,41 @@ export function ContentSection({
     </section>
   );
 }
+
+export function ContentTable({
+  headers,
+  rows,
+}: {
+  headers: string[];
+  rows: string[][];
+}) {
+  return (
+    <div className="overflow-x-auto my-4">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="border-b border-espresso/20">
+            {headers.map((h) => (
+              <th
+                key={h}
+                className="font-mono-label text-[10px] uppercase text-brass text-left py-2 pr-4 whitespace-nowrap"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b border-espresso/10">
+              {row.map((cell, j) => (
+                <td key={j} className="py-2 pr-4 text-umber whitespace-nowrap">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

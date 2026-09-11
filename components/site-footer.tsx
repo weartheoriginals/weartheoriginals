@@ -117,7 +117,7 @@ export default async function SiteFooter() {
             </div>
           ))}
 
-          <div>
+          {/* <div>
             <h3 className="font-mono-label text-[11px] uppercase text-brass mb-4">
               Contact
             </h3>
@@ -133,7 +133,7 @@ export default async function SiteFooter() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
         </div>
 
         <hr className="stitch-divider my-10" />
