@@ -11,7 +11,7 @@ export interface Category {
 }
 
 export interface CategoryWithParent extends Category {
-  parent: Pick<Category, 'id' | 'name' | 'slug'> | null;
+  parent: Pick<Category, "id" | "name" | "slug"> | null;
 }
 
 export interface Product {
@@ -72,6 +72,7 @@ export type GroupedVariants = Record<string, ProductVariant[]>;
 
 export interface Order {
   id: string;
+  order_number: string;
   full_name: string;
   email: string;
   phone: string | null;
@@ -81,7 +82,47 @@ export interface Order {
   created_at: string;
 }
 
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export interface OrderStatusHistoryEntry {
+  status: OrderStatus;
+  happened_at: string;
+}
+
+export interface TrackedOrderItem {
+  id: string;
+  quantity: number;
+  unit_price: number;
+  products: { name: string; slug: string } | null;
+  order_item_variants: {
+    product_variants: {
+      attribute_name: string;
+      attribute_value: string;
+    } | null;
+  }[];
+}
+
+export interface TrackedOrder {
+  id: string;
+  order_number: string;
+  status: OrderStatus;
+  total_amount: number;
+  shipping_address: ShippingAddress;
+  created_at: string;
+  order_items: TrackedOrderItem[];
+  order_status_history: OrderStatusHistoryEntry[];
+}
+
+export interface TrackOrderInput {
+  order_number: string;
+  email: string;
+}
+
+export type OrderStatus =
+  | "confirmed"
+  | "processing"
+  | "dispatched"
+  | "in_transit"
+  | "delivered"
+  | "cancelled";
 
 export interface ShippingAddress {
   line1: string;
@@ -123,4 +164,6 @@ export interface CreateOrderItemInput {
   variant_ids: string[];
 }
 
-export type ApiResponse<T> = { success: true; data: T } | { success: false; error: string };
+export type ApiResponse<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
