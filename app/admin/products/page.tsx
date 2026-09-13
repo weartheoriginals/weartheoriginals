@@ -219,30 +219,35 @@ export default function AdminProductsPage() {
   }
 
   async function handleImagePick(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !editingProduct) return;
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0 || !editingProduct) return;
     setUploadingImage(true);
     setError('');
-    try {
-      const image_url = await uploadToProductImagesBucket(file, 'products');
-      const headers = await authHeaders();
-      const res = await fetch(`/api/admin/products/${editingProduct.id}/images`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ image_url, is_primary: images.length === 0 }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setError(data.error);
-      } else {
-        setImages(prev => [...prev, data.data]);
+    const headers = await authHeaders();
+    let hasPrimary = images.length > 0;
+    const uploaded: ProductImage[] = [];
+    for (const file of files) {
+      try {
+        const image_url = await uploadToProductImagesBucket(file, 'products');
+        const res = await fetch(`/api/admin/products/${editingProduct.id}/images`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ image_url, is_primary: !hasPrimary }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          setError(data.error);
+          continue;
+        }
+        hasPrimary = true;
+        uploaded.push(data.data);
+      } catch (e: any) {
+        setError(`Image upload failed (${file.name}): ${e.message}`);
       }
-    } catch (e: any) {
-      setError(`Image upload failed: ${e.message}`);
-    } finally {
-      setUploadingImage(false);
-      e.target.value = '';
     }
+    if (uploaded.length > 0) setImages(prev => [...prev, ...uploaded]);
+    setUploadingImage(false);
+    e.target.value = '';
   }
 
   async function handleSetPrimary(imageId: string) {
@@ -686,6 +691,7 @@ export default function AdminProductsPage() {
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
+                        multiple
                         onChange={handleImagePick}
                         className="hidden"
                       />
