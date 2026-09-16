@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { label: 'Dashboard', href: '/admin' },
   { label: 'Products', href: '/admin/products' },
   { label: 'Categories', href: '/admin/categories' },
+  { label: 'Banner', href: '/admin/banner' },
+  { label: 'Materials', href: '/admin/materials' },
 ];
 
 function createSupabase() {

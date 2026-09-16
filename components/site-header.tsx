@@ -22,7 +22,7 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
                 alt="Wear The Originals"
                 width={340}
                 height={84}
-                className="h-12 md:h-16 w-auto"
+                className="h-25 md:h-30 w-auto"
                 priority
               />
             </Link>
