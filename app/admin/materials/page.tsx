@@ -35,6 +35,11 @@ export default function AdminMaterialsPage() {
   const [error, setError] = useState('');
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCaption, setEditCaption] = useState('');
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   async function fetchVideos() {
     setLoading(true);
@@ -109,6 +114,56 @@ export default function AdminMaterialsPage() {
     }
   }
 
+  function openEdit(v: CraftVideo) {
+    setEditingId(v.id);
+    setEditTitle(v.title);
+    setEditCaption(v.caption ?? '');
+    setEditFile(null);
+    setError('');
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditFile(null);
+  }
+
+  async function handleSaveEdit(id: string) {
+    if (!editTitle.trim()) {
+      setError('Title is required');
+      return;
+    }
+    setSavingEdit(true);
+    setError('');
+    try {
+      let video_url: string | undefined;
+      if (editFile) {
+        video_url = await uploadToBucket(editFile, 'site-videos', 'craft');
+      }
+      const headers = await authHeaders();
+      const res = await fetch(`/api/admin/craft-videos/${id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          caption: editCaption.trim() || null,
+          ...(video_url ? { video_url } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.error);
+        return;
+      }
+      setVideos(prev => prev.map(v => (v.id === id ? data.data : v)));
+      setEditingId(null);
+      showSuccess('Video updated');
+    } catch (e: any) {
+      setError(`Update failed: ${e.message}`);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   return (
     <div>
       <div className="mb-6">
@@ -180,20 +235,63 @@ export default function AdminMaterialsPage() {
           <p className="p-6 text-sm text-umber text-center">No videos yet</p>
         ) : (
           videos.map((v, i) => (
-            <div
-              key={v.id}
-              className={`grid grid-cols-[1fr_1fr_80px] px-4 py-3 gap-3 items-center ${
-                i < videos.length - 1 ? 'border-b border-(--hairline)' : ''
-              }`}
-            >
-              <div>
-                <p className="text-sm text-espresso">{v.title}</p>
-                {v.caption && <p className="text-xs text-umber truncate">{v.caption}</p>}
-              </div>
-              <video src={v.video_url} className="w-full h-14 object-cover bg-black/5" muted />
-              <button onClick={() => setDeletingId(v.id)} className="text-xs text-umber hover:text-red-600 text-left">
-                Delete
-              </button>
+            <div key={v.id} className={`px-4 py-3 ${i < videos.length - 1 ? 'border-b border-(--hairline)' : ''}`}>
+              {editingId === v.id ? (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={e => setEditTitle(e.target.value)}
+                    className="w-full border border-(--hairline) bg-ivory px-3 py-2 text-sm text-espresso focus:outline-none focus:border-saddle"
+                  />
+                  <textarea
+                    value={editCaption}
+                    onChange={e => setEditCaption(e.target.value)}
+                    rows={2}
+                    className="w-full border border-(--hairline) bg-ivory px-3 py-2 text-sm text-espresso focus:outline-none focus:border-saddle resize-none"
+                  />
+                  <div>
+                    <label className="text-xs text-umber block mb-1">Replace video (optional)</label>
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime"
+                      onChange={e => setEditFile(e.target.files?.[0] ?? null)}
+                      className="text-sm text-umber"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleSaveEdit(v.id)}
+                      disabled={savingEdit}
+                      className="bg-espresso text-ivory px-4 py-2 font-mono-label text-xs uppercase tracking-widest hover:bg-saddle transition-colors disabled:opacity-50"
+                    >
+                      {savingEdit ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="px-4 py-2 border border-(--hairline) text-xs font-mono-label uppercase tracking-widest text-umber"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-[1fr_1fr_140px] gap-3 items-center">
+                  <div>
+                    <p className="text-sm text-espresso">{v.title}</p>
+                    {v.caption && <p className="text-xs text-umber truncate">{v.caption}</p>}
+                  </div>
+                  <video src={v.video_url} className="w-full h-14 object-cover bg-black/5" muted />
+                  <div className="flex gap-3">
+                    <button onClick={() => openEdit(v)} className="text-xs text-umber hover:text-saddle text-left">
+                      Edit
+                    </button>
+                    <button onClick={() => setDeletingId(v.id)} className="text-xs text-umber hover:text-red-600 text-left">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}
