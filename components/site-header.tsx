@@ -41,13 +41,6 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
 
             <div className="flex items-center gap-6">
               <Link
-                href="/search"
-                aria-label="Search"
-                className="font-mono-label text-[11px] uppercase text-umber hover:text-espresso stitch-underline hidden sm:inline"
-              >
-                Search
-              </Link>
-              <Link
                 href="/cart"
                 aria-label="View cart"
                 className="font-mono-label text-[11px] uppercase text-umber hover:text-espresso stitch-underline"
@@ -117,13 +110,6 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
               {category.name}
             </Link>
           ))}
-          <Link
-            href="/search"
-            onClick={() => setMenuOpen(false)}
-            className="font-mono-label text-[12px] uppercase text-ivory/70 mt-4"
-          >
-            Search
-          </Link>
         </nav>
       </div>
     </>
