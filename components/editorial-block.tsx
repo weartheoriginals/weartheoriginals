@@ -48,12 +48,18 @@ export default function EditorialBlock({
 
   return (
     <section className="border-t border-espresso/10">
-      <div className={`flex flex-col md:flex-row ${reverse ? 'md:flex-row-reverse' : ''}`}>
-        <div className="w-full md:w-1/2 aspect-4/3 md:aspect-auto">
-          <img src={imageUrl} alt={imageAlt ?? title} className="h-full w-full object-cover" />
+      <div
+        className={`mx-auto max-w-6xl flex flex-col md:flex-row md:items-center gap-8 md:gap-14 px-6 md:px-16 py-12 md:py-20 ${
+          reverse ? 'md:flex-row-reverse' : ''
+        }`}
+      >
+        <div className="w-full md:w-1/2 min-w-0">
+          <div className="aspect-4/3 overflow-hidden">
+            <img src={imageUrl} alt={imageAlt ?? title} className="h-full w-full object-cover object-center" />
+          </div>
         </div>
-        <div className="w-full md:w-1/2 flex items-center">
-          <div className="px-6 md:px-16 py-16 md:py-0 max-w-lg">{textContent}</div>
+        <div className="w-full md:w-1/2 min-w-0">
+          <div className="max-w-lg">{textContent}</div>
         </div>
       </div>
     </section>
