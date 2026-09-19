@@ -3,6 +3,7 @@ import Hero from '@/components/hero';
 import { ProductCardData } from '@/components/product-card';
 import ProductShelf from '@/components/product-shelf';
 import { getFeaturedProducts } from '@/lib/queries/products';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import type { ProductWithImages } from '@/lib/types';
 import { getProductImageUrl, PLACEHOLDER_IMAGE } from '@/lib/utils';
 
@@ -16,33 +17,43 @@ function toProductCardData(product: ProductWithImages): ProductCardData {
   };
 }
 
+async function getHomeSections() {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from('home_sections')
+    .select('*')
+    .eq('is_visible', true)
+    .order('display_order', { ascending: true });
+
+  if (error) {
+    console.error('Failed to load home sections:', error);
+    return [];
+  }
+  return data ?? [];
+}
+
 export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts(8);
+  const [featuredProducts, sections] = await Promise.all([getFeaturedProducts(8), getHomeSections()]);
   const cardProducts = featuredProducts.map(toProductCardData);
 
   return (
     <main>
       <Hero />
       <ProductShelf eyebrow="Just In" title="Featured This Season" products={cardProducts} />
-      <EditorialBlock
-        eyebrow="The Atelier"
-        title="Cut and stitched by hand, one hide at a time."
-        copy="Every jacket begins as a single full-grain hide, inspected under daylight for the story it already carries. Our pattern cutters work around each mark, not around a template — which is why no two pieces are ever quite the same."
-        ctaLabel="Meet the Makers"
-        href="/about"
-        imageUrl="https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1400&auto=format&fit=crop"
-        imageAlt="Leatherworker hand-stitching a jacket seam at a workbench"
-      />
-      <EditorialBlock
-        eyebrow="Materials"
-        title="Full-grain, vegetable-tanned, built to age well."
-        copy="We work almost exclusively in vegetable-tanned full-grain leather — no corrected surfaces, no shortcuts. It scuffs, it darkens, it molds to how you actually live in it. That's not a flaw to manage; it's the whole point."
-        ctaLabel="Explore Materials"
-        href="/materials"
-        imageUrl="https://images.unsplash.com/photo-1601924582971-c65b471bb8d0?q=80&w=1400&auto=format&fit=crop"
-        imageAlt="Rolls of vegetable-tanned leather in tan and espresso tones"
-        reverse
-      />
+
+      {sections.map((section, index) => (
+        <EditorialBlock
+          key={section.id}
+          eyebrow={section.eyebrow}
+          title={section.title}
+          copy={section.description}
+          ctaLabel={section.button_label}
+          href={section.button_href}
+          imageUrl={section.image_url}
+          reverse={index % 2 === 1}
+        />
+      ))}
+
       <ProductShelf eyebrow="Carry" title="Bags & Accessories" products={cardProducts.slice(2)} />
     </main>
   );
