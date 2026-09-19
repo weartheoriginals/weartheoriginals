@@ -10,7 +10,7 @@ export default function ProductShelf({
   products: ProductCardData[];
 }) {
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24 px-4">
       <div className="mx-auto max-w-350 px-6 md:px-10">
         <div className="flex items-end justify-between mb-8 md:mb-10">
           <div>

@@ -27,7 +27,7 @@ export default function ProductCard({
   /** 'compact' = smaller type/spacing for dense grids (5+ across). */
   size?: 'default' | 'compact';
 }) {
-  const widthClasses = variant === 'shelf' ? 'shelf-item shrink-0 w-70 md:w-[320px]' : 'w-full';
+  const widthClasses = variant === 'shelf' ? 'shelf-item shrink-0 w-44 md:w-[320px]' : 'w-full';
   const isCompact = size === 'compact';
 
   return (
