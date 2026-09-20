@@ -20,6 +20,7 @@ const STATIC_COLUMNS = [
       { label: 'Refund Policy', href: '/refund-policy' },
       { label: 'Size Guide', href: '/size-guide' },
       { label: 'Leather Care Guide', href: '/leather-care' },
+      { label: 'Track You Order', href: '/track-order' },
     ],
   },
 ];
@@ -89,7 +90,7 @@ export default async function SiteFooter() {
             </div>
           ))}
 
-          <div>
+          <div className="col-span-2 md:col-span-1">
             <h3 className="font-mono-label text-[11px] uppercase text-brass mb-3">Stay Connected</h3>
             <div className="flex gap-3 mb-5">
               <a href="#" aria-label="Instagram" className="text-ivory/60 hover:text-brass transition-colors">

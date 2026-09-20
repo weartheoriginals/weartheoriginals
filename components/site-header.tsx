@@ -15,14 +15,14 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
     <>
       <header className="sticky top-0 z-40 bg-ivory/90 backdrop-blur-sm border-b border-espresso/10">
         <div className="mx-auto max-w-350 px-6 md:px-10">
-          <div className="flex items-center justify-between h-20 py-2">
-            <Link href="/" className="flex items-center" onClick={() => setMenuOpen(false)}>
+          <div className="flex items-center justify-between h-24 md:h-24">
+            <Link href="/" className="flex items-center pt-3" onClick={() => setMenuOpen(false)}>
               <Image
-                src="/logo.svg"
+                src="/logo.png"
                 alt="Wear The Originals"
-                width={340}
-                height={84}
-                className="h-25 md:h-30 w-auto"
+                width={552}
+                height={198}
+                className="h-10 md:h-12 w-auto"
                 priority
               />
             </Link>
@@ -37,6 +37,12 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
                   {category.name}
                 </Link>
               ))}
+              <Link
+                href="/custom"
+                className="stitch-underline font-mono-label text-[11px] uppercase text-umber hover:text-espresso transition-colors"
+              >
+                Custom
+              </Link>
             </nav>
 
             <div className="flex items-center gap-6">
@@ -57,17 +63,17 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
                 className="md:hidden relative z-50 w-6 h-5 flex flex-col justify-between"
               >
                 <span
-                  className={`block h-[1.5px] w-full bg-espresso transition-transform duration-300 ${
+                  className={`block h-[0.5px] w-full bg-espresso transition-transform duration-300 ${
                     menuOpen ? 'translate-y-2.25 rotate-45' : ''
                   }`}
                 />
                 <span
-                  className={`block h-[1.5px] w-full bg-espresso transition-opacity duration-300 ${
+                  className={`block h-[0.5px] w-full bg-espresso transition-opacity duration-300 ${
                     menuOpen ? 'opacity-0' : 'opacity-100'
                   }`}
                 />
                 <span
-                  className={`block h-[1.5px] w-full bg-espresso transition-transform duration-300 ${
+                  className={`block h-[0.5px] w-full bg-espresso transition-transform duration-300 ${
                     menuOpen ? '-translate-y-2.25 -rotate-45' : ''
                   }`}
                 />
@@ -110,6 +116,18 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
               {category.name}
             </Link>
           ))}
+
+          <Link
+            href="/custom"
+            onClick={() => setMenuOpen(false)}
+            className="font-display text-3xl text-ivory transition-opacity duration-500"
+            style={{
+              transitionDelay: menuOpen ? `${150 + categories.length * 80}ms` : '0ms',
+              opacity: menuOpen ? 1 : 0,
+            }}
+          >
+            Custom
+          </Link>
         </nav>
       </div>
     </>
