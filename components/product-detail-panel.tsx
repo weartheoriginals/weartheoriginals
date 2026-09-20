@@ -1,11 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useCart } from '@/lib/cart-context';
-import { useEffect, useRef } from 'react';
 import type { ProductVariant } from '@/lib/types';
 import { getSelectionStock, groupVariants, isSelectionComplete, resolveVariantIds } from '@/lib/variant-helpers';
-import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 function formatPrice(amount: number) {
   return new Intl.NumberFormat('en-US', {
