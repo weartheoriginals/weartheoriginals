@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCart } from '@/lib/cart-context';
 import { useEffect, useRef } from 'react';
 import type { ProductVariant } from '@/lib/types';
@@ -232,6 +233,16 @@ export default function ProductDetailPanel({
       >
         {outOfStock ? 'Out of Stock' : added ? 'Added to Bag' : 'Add to Bag'}
       </button>
+
+      <div className="mt-6 border-t border-espresso/10 pt-6 text-center">
+        <p className="text-sm text-umber">Want this customized?</p>
+        <Link
+          href={`/custom?product=${slug}`}
+          className="mt-2 inline-block font-mono-label text-xs uppercase tracking-widest text-espresso border-b border-espresso/40 pb-0.5 hover:border-espresso transition-colors"
+        >
+          Request Customization
+        </Link>
+      </div>
     </div>
   );
 }
