@@ -1,7 +1,6 @@
 import EditorialBlock from '@/components/editorial-block';
 import Hero from '@/components/hero';
 import { ProductCardData } from '@/components/product-card';
-import ProductShelf from '@/components/product-shelf';
 import { getFeaturedProducts } from '@/lib/queries/products';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { ProductWithImages } from '@/lib/types';
@@ -33,14 +32,11 @@ async function getHomeSections() {
 }
 
 export default async function HomePage() {
-  const [featuredProducts, sections] = await Promise.all([getFeaturedProducts(8), getHomeSections()]);
-  const cardProducts = featuredProducts.map(toProductCardData);
+  const sections = await getHomeSections();
 
   return (
     <main>
       <Hero />
-      <ProductShelf eyebrow="Just In" title="Featured This Season" products={cardProducts} />
-
       {sections.map((section, index) => (
         <EditorialBlock
           key={section.id}
@@ -53,8 +49,6 @@ export default async function HomePage() {
           reverse={index % 2 === 1}
         />
       ))}
-
-      <ProductShelf eyebrow="Carry" title="Bags & Accessories" products={cardProducts.slice(2)} />
     </main>
   );
 }
