@@ -7,26 +7,17 @@ export async function GET(request: NextRequest) {
 
   const { data } = await getSupabasePublic()
     .from('products')
-    .select('id, name')
+    .select('id, category:categories(slug)')
     .eq('slug', slug)
     .eq('is_active', true)
     .single();
 
   if (!data) return NextResponse.json({ success: false }, { status: 404 });
 
-  // Best-effort guess of the product type from the name; falls back to leaving the current selection
-  const n = data.name.toLowerCase();
-  const product_type = n.includes('bomber')
-    ? 'bomber'
-    : n.includes('trench')
-      ? 'trench_coat'
-      : n.includes('wallet')
-        ? 'wallet'
-        : n.includes('bag')
-          ? 'bag'
-          : n.includes('jacket')
-            ? 'leather_jacket'
-            : null;
+  const category = Array.isArray(data.category) ? data.category[0] : data.category;
 
-  return NextResponse.json({ success: true, data: { id: data.id, product_type } });
+  return NextResponse.json({
+    success: true,
+    data: { id: data.id, product_type: category?.slug ?? null },
+  });
 }

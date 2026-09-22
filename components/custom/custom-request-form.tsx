@@ -4,11 +4,11 @@ import { submitCustomRequest, type CustomRequestFields } from '@/lib/submit-cust
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const PRODUCT_OPTIONS = [
-  { value: 'leather_jacket', label: 'Leather Jacket' },
-  { value: 'bomber', label: 'Bomber Jacket' },
-  { value: 'trench_coat', label: 'Trench Coat' },
-  { value: 'bag', label: 'Leather Bag' },
-  { value: 'wallet', label: 'Wallet' },
+  { value: 'mens-jackets', label: "Men's Jackets" },
+  { value: 'womens-jackets', label: "Women's Jackets" },
+  { value: 'bags-and-clutches', label: 'Bags & Clutches' },
+  { value: 'vintage-leather', label: 'Vintage Leather' },
+  { value: 'leather-accessories', label: 'Leather Accessories' },
   { value: 'other', label: 'Other' },
 ];
 
