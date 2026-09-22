@@ -6,24 +6,24 @@ const CAPABILITIES = [
   {
     label: 'Colors',
     copy: 'Choose from our premium leather color range or request a custom shade.',
-    image: '/custom/colors.jpg',
+    image: '/custom/colors.jpeg',
   },
   {
     label: 'Design / Style',
     copy: 'Modify existing styles or create a completely new design.',
-    image: '/custom/design.jpg',
+    image: '/custom/design.jpeg',
   },
-  { label: 'Stitching', copy: 'Custom thread colors, patterns and detailing.', image: '/custom/stitching.jpg' },
+  { label: 'Stitching', copy: 'Custom thread colors, patterns and detailing.', image: '/custom/stitching.jpeg' },
   {
     label: 'Embroidery',
     copy: 'Add logos, text, or unique designs with precision embroidery.',
-    image: '/custom/embroidery.jpg',
+    image: '/custom/embriodery.jpeg',
   },
-  { label: 'Patches', copy: 'Custom patches, logos or artwork.', image: '/custom/patches.jpg' },
-  { label: 'Hardware', copy: 'Choose your preferred zippers, buttons and finishes.', image: '/custom/hardware.jpg' },
-  { label: 'Names / Initials', copy: 'Personalize with your initials, name or number.', image: '/custom/initials.jpg' },
-  { label: 'Measurements', copy: 'Get the perfect fit with custom sizing.', image: '/custom/measurements.jpg' },
-  { label: 'Reference Design', copy: 'Share your inspiration or sketches.', image: '/custom/reference.jpg' },
+  { label: 'Patches', copy: 'Custom patches, logos or artwork.', image: '/custom/patches.jpeg' },
+  { label: 'Hardware', copy: 'Choose your preferred zippers, buttons and finishes.', image: '/custom/hardware.jpeg' },
+  { label: 'Names / Initials', copy: 'Personalize with your initials, name or number.', image: '/custom/initials.jpeg' },
+  { label: 'Measurements', copy: 'Get the perfect fit with custom sizing.', image: '/custom/measurements.jpeg' },
+  { label: 'Reference Design', copy: 'Share your inspiration or sketches.', image: '/custom/reference.jpeg' },
 ];
 
 function CapabilityCard({ label, copy, image }: (typeof CAPABILITIES)[number]) {
@@ -47,7 +47,11 @@ export default async function CustomPage({ searchParams }: { searchParams: Promi
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden bg-espresso text-ivory">
-        <img src="/custom/hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-right opacity-70" />
+        <img
+          src="/custom/hero.jpeg"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-right opacity-70"
+        />
         <div className="absolute inset-0 bg-linear-to-r from-espresso via-espresso/70 to-transparent" />
         <div className="relative mx-auto max-w-350 px-6 md:px-10 py-20 md:py-32">
           <p className="font-mono-label text-[11px] uppercase tracking-widest text-ivory/70">Customization</p>

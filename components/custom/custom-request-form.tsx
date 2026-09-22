@@ -522,7 +522,7 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
       {/* Right preview panel */}
       <div className="hidden lg:block">
         <div className="sticky top-28 aspect-4/5 bg-espresso/5 overflow-hidden">
-          <img src="/custom/preview.jpg" alt="Custom OGNLS jacket preview" className="h-full w-full object-cover" />
+          <img src="/custom/preview.jpeg" alt="Custom OGNLS jacket preview" className="h-full w-full object-cover" />
         </div>
       </div>
     </div>
