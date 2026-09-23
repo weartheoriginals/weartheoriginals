@@ -1,3 +1,5 @@
+import CraftMarquee from "@/components/craft-marquee";
+import CraftScrollSection from "@/components/craft-scroll";
 import EditorialBlock from "@/components/editorial-block";
 import Hero from "@/components/hero";
 import { ProductCardData } from "@/components/product-card";
@@ -39,6 +41,8 @@ export default async function HomePage() {
   return (
     <main>
       <Hero />
+      <CraftMarquee />
+      <CraftScrollSection />
       {sections.map((section, index) => (
         <EditorialBlock
           key={section.id}

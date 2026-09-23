@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import Link from "next/link";
+import MagneticLink from "./magnetic-link";
 
 const container = {
   hidden: {},
@@ -10,12 +10,11 @@ const container = {
   },
 };
 
-const item = {
-  hidden: { opacity: 0, y: 24 },
+const lineReveal = {
+  hidden: { y: "110%" },
   show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
+    y: "0%",
+    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 
@@ -39,36 +38,44 @@ export default function HeroContent({ imageUrl }: { imageUrl: string }) {
         animate="show"
         className="relative h-full mx-auto max-w-350 px-6 md:px-10 flex flex-col justify-end pb-16 md:pb-24"
       >
-        <motion.p
-          variants={item}
-          className="font-mono-label text-[12px] uppercase text-ivory/90 mb-4 drop-shadow-sm"
-        >
-          Autumn Collection — Hand-Cut, Hand-Stitched
-        </motion.p>
-        <motion.h1
-          variants={item}
-          className="font-display font-light text-ivory text-4xl sm:text-5xl md:text-7xl leading-[1.05] max-w-2xl drop-shadow-sm"
-        >
-          Leather made to
-          <br />
-          outlast the trend.
-        </motion.h1>
+        <div className="overflow-hidden">
+          <motion.p
+            variants={lineReveal}
+            className="font-mono-label text-[12px] uppercase text-ivory/90 mb-4 drop-shadow-sm"
+          >
+            Autumn Collection — Hand-Cut, Hand-Stitched
+          </motion.p>
+        </div>
+
+        <h1 className="font-display font-light text-ivory text-4xl sm:text-5xl md:text-7xl leading-[1.05] max-w-2xl drop-shadow-sm">
+          <span className="overflow-hidden block">
+            <motion.span variants={lineReveal} className="block">
+              Leather made to
+            </motion.span>
+          </span>
+          <span className="overflow-hidden block">
+            <motion.span variants={lineReveal} className="block">
+              outlast the trend.
+            </motion.span>
+          </span>
+        </h1>
+
         <motion.div
-          variants={item}
+          variants={lineReveal}
           className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-8"
         >
-          <Link
+          <MagneticLink
             href="/c/leather-accessories"
             className="stitch-underline font-mono-label text-[12px] uppercase text-ivory"
           >
             Shop Leather Accessories
-          </Link>
-          <Link
+          </MagneticLink>
+          <MagneticLink
             href="/about"
             className="stitch-underline font-mono-label text-[12px] uppercase text-ivory/70 hover:text-ivory"
           >
             Our Craft
-          </Link>
+          </MagneticLink>
         </motion.div>
       </motion.div>
     </section>

@@ -1,7 +1,8 @@
 "use client";
 
-import { motion } from "motion/react";
-import Link from "next/link";
+import { motion, useScroll, useTransform } from "motion/react";
+import { useRef } from "react";
+import MagneticLink from "./magnetic-link";
 
 export default function EditorialBlock({
   eyebrow,
@@ -23,6 +24,12 @@ export default function EditorialBlock({
   reverse?: boolean;
 }) {
   const hasButton = !!ctaLabel && !!href;
+  const imgWrapRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: imgWrapRef,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
 
   const textContent = (
     <>
@@ -36,12 +43,12 @@ export default function EditorialBlock({
       </h2>
       {copy && <p className="mt-5 text-umber leading-relaxed">{copy}</p>}
       {hasButton && (
-        <Link
+        <MagneticLink
           href={href!}
           className="stitch-underline font-mono-label text-[12px] uppercase text-espresso inline-block mt-7"
         >
           {ctaLabel}
-        </Link>
+        </MagneticLink>
       )}
     </>
   );
@@ -70,6 +77,7 @@ export default function EditorialBlock({
         }`}
       >
         <motion.div
+          ref={imgWrapRef}
           initial={{ opacity: 0, x: reverse ? 40 : -40 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-10% 0px" }}
@@ -77,13 +85,15 @@ export default function EditorialBlock({
           className="w-full md:w-1/2 min-w-0"
         >
           <div className="aspect-4/3 overflow-hidden">
-            <img
+            <motion.img
               src={imageUrl}
               alt={imageAlt ?? title}
-              className="h-full w-full object-cover object-center"
+              className="h-full w-full object-cover object-center scale-115"
+              style={{ y }}
             />
           </div>
         </motion.div>
+
         <motion.div
           initial={{ opacity: 0, x: reverse ? -40 : 40 }}
           whileInView={{ opacity: 1, x: 0 }}
