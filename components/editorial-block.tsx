@@ -1,8 +1,32 @@
-"use client";
+'use client';
 
-import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
-import MagneticLink from "./magnetic-link";
+import { motion } from 'motion/react';
+import MagneticLink from './magnetic-link';
+import StitchDivider from './stitch-divider';
+
+const textStagger = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
+  },
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+const maskReveal = {
+  hidden: { y: '110%' },
+  show: {
+    y: '0%',
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
 
 export default function EditorialBlock({
   eyebrow,
@@ -24,85 +48,71 @@ export default function EditorialBlock({
   reverse?: boolean;
 }) {
   const hasButton = !!ctaLabel && !!href;
-  const imgWrapRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: imgWrapRef,
-    offset: ["start end", "end start"],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
 
   const textContent = (
-    <>
+    <motion.div variants={textStagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-10% 0px' }}>
       {eyebrow && (
-        <p className="font-mono-label text-[11px] uppercase text-brass mb-4">
+        <motion.p variants={fadeUp} className="font-mono-label text-[11px] uppercase text-brass mb-4">
           {eyebrow}
-        </p>
+        </motion.p>
       )}
-      <h2 className="font-display font-light text-3xl md:text-4xl text-espresso leading-tight">
-        {title}
+      <h2 className="font-display font-light text-3xl md:text-4xl text-espresso leading-tight overflow-hidden">
+        <motion.span variants={maskReveal} className="block">
+          {title}
+        </motion.span>
       </h2>
-      {copy && <p className="mt-5 text-umber leading-relaxed">{copy}</p>}
-      {hasButton && (
-        <MagneticLink
-          href={href!}
-          className="stitch-underline font-mono-label text-[12px] uppercase text-espresso inline-block mt-7"
-        >
-          {ctaLabel}
-        </MagneticLink>
+      {copy && (
+        <motion.p variants={fadeUp} className="mt-5 text-umber leading-relaxed">
+          {copy}
+        </motion.p>
       )}
-    </>
+      {hasButton && (
+        <motion.div variants={fadeUp}>
+          <MagneticLink
+            href={href!}
+            className="stitch-underline font-mono-label text-[12px] uppercase text-espresso inline-block mt-7"
+          >
+            {ctaLabel}
+          </MagneticLink>
+        </motion.div>
+      )}
+    </motion.div>
   );
 
   if (!imageUrl) {
     return (
-      <section className="border-t border-espresso/10">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-10% 0px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="px-6 md:px-16 py-16 md:py-24 max-w-2xl mx-auto text-center"
-        >
-          {textContent}
-        </motion.div>
+      <section>
+        <StitchDivider />
+        <div className="px-6 md:px-16 py-16 md:py-24 max-w-2xl mx-auto text-center">{textContent}</div>
       </section>
     );
   }
 
   return (
-    <section className="border-t border-espresso/10">
+    <section>
+      <StitchDivider />
       <div
         className={`mx-auto max-w-6xl flex flex-col md:flex-row md:items-center gap-8 md:gap-14 px-6 md:px-16 py-12 md:py-20 ${
-          reverse ? "md:flex-row-reverse" : ""
+          reverse ? 'md:flex-row-reverse' : ''
         }`}
       >
-        <motion.div
-          ref={imgWrapRef}
-          initial={{ opacity: 0, x: reverse ? 40 : -40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-10% 0px" }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full md:w-1/2 min-w-0"
-        >
-          <div className="aspect-4/3 overflow-hidden">
-            <motion.img
-              src={imageUrl}
-              alt={imageAlt ?? title}
-              className="h-full w-full object-cover object-center scale-115"
-              style={{ y }}
+        <div className="w-full md:w-1/2 min-w-0">
+          <div className="relative aspect-4/3 overflow-hidden">
+            <img src={imageUrl} alt={imageAlt ?? title} className="h-full w-full object-cover object-center" />
+            <motion.div
+              initial={{ scaleX: 1 }}
+              whileInView={{ scaleX: 0 }}
+              viewport={{ once: true, margin: '-10% 0px' }}
+              transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
+              style={{ originX: reverse ? 1 : 0 }}
+              className="absolute inset-0 bg-ivory"
             />
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: reverse ? -40 : 40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-10% 0px" }}
-          transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full md:w-1/2 min-w-0"
-        >
+        <div className="w-full md:w-1/2 min-w-0">
           <div className="max-w-lg">{textContent}</div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

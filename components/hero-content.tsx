@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { motion } from "motion/react";
-import MagneticLink from "./magnetic-link";
+import { motion } from 'motion/react';
+import MagneticLink from './magnetic-link';
 
 const container = {
   hidden: {},
@@ -11,9 +11,9 @@ const container = {
 };
 
 const lineReveal = {
-  hidden: { y: "110%" },
+  hidden: { y: '110%' },
   show: {
-    y: "0%",
+    y: '0%',
     transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
@@ -27,7 +27,7 @@ export default function HeroContent({ imageUrl }: { imageUrl: string }) {
         className="absolute inset-0 h-full w-full object-cover object-[center_20%]"
         initial={{ scale: 1.08 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 12, ease: "easeOut" }}
+        transition={{ duration: 12, ease: 'easeOut' }}
       />
       <div className="absolute inset-0 bg-linear-to-t from-espresso/90 via-espresso/50 to-espresso/10" />
       <div className="absolute inset-0 bg-linear-to-r from-espresso/60 via-transparent to-transparent md:from-espresso/50" />
