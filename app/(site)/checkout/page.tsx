@@ -1,6 +1,8 @@
 'use client';
 
+import CheckoutPaymentStep from '@/components/checkout-payment-step';
 import { useCart } from '@/lib/cart-context';
+import { generateMockReference } from '@/lib/payment-config';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -80,6 +82,8 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [placing, setPlacing] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
+  const [reference] = useState(() => generateMockReference());
 
   const shipping = subtotal >= 500 ? 0 : 25;
   const grandTotal = subtotal + shipping;
@@ -105,49 +109,55 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   }
 
-  async function handlePlaceOrder() {
+  // async function handlePlaceOrder() {
+  //   if (!validate()) return;
+
+  //   setPlacing(true);
+  //   setServerError('');
+
+  //   try {
+  //     const res = await fetch('/api/orders', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         full_name: `${form.first_name.trim()} ${form.last_name.trim()}`.trim(),
+  //         email: form.email.trim(),
+  //         phone: form.phone.trim(),
+  //         shipping_address: {
+  //           line1: form.address.trim(),
+  //           city: form.city.trim(),
+  //           postal_code: form.postal_code.trim(),
+  //           country: form.country.trim(),
+  //         },
+  //         notes: form.notes.trim() || undefined,
+  //         items: items.map(item => ({
+  //           product_id: item.product_id,
+  //           quantity: item.quantity,
+  //           variant_ids: item.variantIds,
+  //         })),
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!data.success) {
+  //       setServerError(data.error ?? 'Something went wrong. Please try again.');
+  //       setPlacing(false);
+  //       return;
+  //     }
+
+  //     clearCart();
+  //     router.push(`/order-confirmation?order_id=${data.data.id}`);
+  //   } catch {
+  //     setServerError('Network error. Please check your connection and try again.');
+  //     setPlacing(false);
+  //   }
+  // }
+
+  function handleContinueToPayment() {
     if (!validate()) return;
-
-    setPlacing(true);
-    setServerError('');
-
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          full_name: `${form.first_name.trim()} ${form.last_name.trim()}`.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          shipping_address: {
-            line1: form.address.trim(),
-            city: form.city.trim(),
-            postal_code: form.postal_code.trim(),
-            country: form.country.trim(),
-          },
-          notes: form.notes.trim() || undefined,
-          items: items.map(item => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-            variant_ids: item.variantIds,
-          })),
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setServerError(data.error ?? 'Something went wrong. Please try again.');
-        setPlacing(false);
-        return;
-      }
-
-      clearCart();
-      router.push(`/order-confirmation?order_id=${data.data.id}`);
-    } catch {
-      setServerError('Network error. Please check your connection and try again.');
-      setPlacing(false);
-    }
+    setStep('payment');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   if (items.length === 0) {
@@ -181,126 +191,120 @@ export default function CheckoutPage() {
       <h1 className="font-display font-light text-3xl md:text-4xl text-espresso mb-10 md:mb-14">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16">
-        {/* Left: form */}
         <div className="lg:col-span-2 border-t border-espresso/10 pt-8">
-          <h2 className="font-display text-xl text-espresso mb-6">Delivery Information</h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <Field
-              label="First Name"
-              required
-              value={form.first_name}
-              error={errors.first_name}
-              onChange={val => setField('first_name', val)}
-              placeholder="Jane"
-            />
-            <Field
-              label="Last Name"
-              required
-              value={form.last_name}
-              error={errors.last_name}
-              onChange={val => setField('last_name', val)}
-              placeholder="Doe"
-            />
-            <Field
-              label="Email"
-              type="email"
-              required
-              value={form.email}
-              error={errors.email}
-              onChange={val => setField('email', val)}
-              placeholder="jane@example.com"
-            />
-            <Field
-              label="Phone Number"
-              type="tel"
-              required
-              value={form.phone}
-              error={errors.phone}
-              onChange={val => setField('phone', val)}
-              placeholder="+1 234 567 8901"
-            />
-            <div className="sm:col-span-2">
-              <Field
-                label="Full Address"
-                required
-                value={form.address}
-                error={errors.address}
-                onChange={val => setField('address', val)}
-                placeholder="123 Main Street, Apt 4B"
-              />
-            </div>
-            <Field
-              label="City"
-              required
-              value={form.city}
-              error={errors.city}
-              onChange={val => setField('city', val)}
-              placeholder="New York"
-            />
-            <Field
-              label="Postal Code"
-              value={form.postal_code}
-              onChange={val => setField('postal_code', val)}
-              placeholder="10001"
-            />
-            <Field
-              label="Country"
-              required
-              value={form.country}
-              error={errors.country}
-              onChange={val => setField('country', val)}
-              placeholder="United States"
-            />
+          {/* Step indicator */}
+          <div className="flex items-center gap-3 mb-8">
+            {(['shipping', 'payment'] as const).map((s, i) => (
+              <div key={s} className="flex items-center gap-3">
+                <span
+                  className={`w-6 h-6 rounded-full flex items-center justify-center font-mono-label text-[10px] ${
+                    step === s ? 'bg-espresso text-ivory' : 'border border-espresso/30 text-umber'
+                  }`}
+                >
+                  {i + 1}
+                </span>
+                <span className={`font-mono-label text-[11px] uppercase ${step === s ? 'text-espresso' : 'text-umber/60'}`}>
+                  {s}
+                </span>
+                {i === 0 && <span className="w-12 md:w-20 border-t border-dashed border-espresso/30" />}
+              </div>
+            ))}
           </div>
 
-          <div className="mt-5">
-            <label className="font-mono-label text-[11px] uppercase text-umber block mb-2">
-              Order Notes <span className="text-umber/50 normal-case">(optional)</span>
-            </label>
-            <textarea
-              value={form.notes}
-              onChange={e => setField('notes', e.target.value)}
-              placeholder="Delivery instructions, gift notes, etc."
-              rows={3}
-              className="w-full px-4 py-3 bg-ivory border border-espresso/20 text-sm text-espresso placeholder:text-umber/40 outline-none transition-colors focus:border-espresso resize-y"
+          {step === 'payment' ? (
+            <CheckoutPaymentStep
+              totalUSD={grandTotal}
+              reference={reference}
+              senderName={`${form.first_name} ${form.last_name}`.trim()}
+              onBack={() => setStep('shipping')}
             />
-          </div>
+          ) : (
+            <>
+              <h2 className="font-display text-xl text-espresso mb-6">Delivery Information</h2>
 
-          {/* Payment method — bank transfer only */}
-          <div className="mt-10">
-            <h2 className="font-display text-xl text-espresso mb-6">Payment</h2>
-
-            <div className="border border-espresso/20 p-6 bg-umber/5">
-              <p className="font-mono-label text-[11px] uppercase text-brass mb-4">Bank Transfer</p>
-              <p className="text-sm text-umber mb-5">
-                Complete your payment via bank transfer using the details below, then send your receipt to confirm your
-                order.
-              </p>
-
-              <div className="space-y-2.5 border-t border-espresso/10 pt-5">
-                {[
-                  ['Bank', 'Placeholder Bank Ltd.'],
-                  ['Account Title', 'Wear The Originals'],
-                  ['Account No', '0000-0000-0000'],
-                  ['IBAN', 'XX00 0000 0000 0000 0000 0000'],
-                ].map(([key, val]) => (
-                  <div key={key} className="flex gap-3 text-sm">
-                    <span className="font-mono-label text-[11px] uppercase text-umber/70 min-w-28 shrink-0 pt-0.5">
-                      {key}
-                    </span>
-                    <span className="text-espresso">{val}</span>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Field
+                  label="First Name"
+                  required
+                  value={form.first_name}
+                  error={errors.first_name}
+                  onChange={val => setField('first_name', val)}
+                  placeholder="Jane"
+                />
+                <Field
+                  label="Last Name"
+                  required
+                  value={form.last_name}
+                  error={errors.last_name}
+                  onChange={val => setField('last_name', val)}
+                  placeholder="Doe"
+                />
+                <Field
+                  label="Email"
+                  type="email"
+                  required
+                  value={form.email}
+                  error={errors.email}
+                  onChange={val => setField('email', val)}
+                  placeholder="jane@example.com"
+                />
+                <Field
+                  label="Phone Number"
+                  type="tel"
+                  required
+                  value={form.phone}
+                  error={errors.phone}
+                  onChange={val => setField('phone', val)}
+                  placeholder="+1 234 567 8901"
+                />
+                <div className="sm:col-span-2">
+                  <Field
+                    label="Full Address"
+                    required
+                    value={form.address}
+                    error={errors.address}
+                    onChange={val => setField('address', val)}
+                    placeholder="123 Main Street, Apt 4B"
+                  />
+                </div>
+                <Field
+                  label="City"
+                  required
+                  value={form.city}
+                  error={errors.city}
+                  onChange={val => setField('city', val)}
+                  placeholder="New York"
+                />
+                <Field
+                  label="Postal Code"
+                  value={form.postal_code}
+                  onChange={val => setField('postal_code', val)}
+                  placeholder="10001"
+                />
+                <Field
+                  label="Country"
+                  required
+                  value={form.country}
+                  error={errors.country}
+                  onChange={val => setField('country', val)}
+                  placeholder="United States"
+                />
               </div>
 
-              <p className="text-xs text-umber mt-5 pt-5 border-t border-espresso/10 leading-relaxed">
-                After payment, send your receipt to <span className="text-espresso font-medium">+00 000 0000000</span> on
-                WhatsApp, or email <span className="text-espresso font-medium">orders@wear-the-originals.com</span>, to
-                confirm your order.
-              </p>
-            </div>
-          </div>
+              <div className="mt-5">
+                <label className="font-mono-label text-[11px] uppercase text-umber block mb-2">
+                  Order Notes <span className="text-umber/50 normal-case">(optional)</span>
+                </label>
+                <textarea
+                  value={form.notes}
+                  onChange={e => setField('notes', e.target.value)}
+                  placeholder="Delivery instructions, gift notes, etc."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-ivory border border-espresso/20 text-sm text-espresso placeholder:text-umber/40 outline-none transition-colors focus:border-espresso resize-y"
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right: order summary */}
@@ -359,18 +363,20 @@ export default function CheckoutPage() {
               <div className="mt-4 px-4 py-3 bg-red-50 border border-red-200 text-sm text-red-600">{serverError}</div>
             )}
 
-            <button
-              type="button"
-              onClick={handlePlaceOrder}
-              disabled={placing}
-              className="mt-6 block w-full bg-espresso text-ivory font-mono-label text-[12px] uppercase py-4 text-center hover:bg-umber transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {placing ? 'Placing Order…' : `Place Order · ${formatPrice(grandTotal)}`}
-            </button>
-
-            <p className="text-xs text-umber/70 text-center mt-4 leading-relaxed">
-              By placing your order you agree to our terms. Send your payment receipt to confirm your order.
-            </p>
+            {step === 'shipping' && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleContinueToPayment}
+                  className="mt-6 block w-full bg-espresso text-ivory font-mono-label text-[12px] uppercase py-4 text-center hover:bg-umber transition-colors"
+                >
+                  Continue to Payment
+                </button>
+                <p className="text-xs text-umber/70 text-center mt-4 leading-relaxed">
+                  Your order is reserved while we verify your payment.
+                </p>
+              </>
+            )}
 
             <div className="text-center mt-4">
               <Link href="/cart" className="font-mono-label text-[11px] uppercase text-umber stitch-underline">
