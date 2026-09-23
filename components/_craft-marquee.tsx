@@ -1,5 +1,5 @@
 export default function CraftMarquee() {
-  const items = ["Hand-Cut", "Hand-Stitched", "Full-Grain", "Made to Order"];
+  const items = ['Hand-Cut', 'Hand-Stitched', 'Full-Grain', 'Made to Order'];
   const track = [...items, ...items, ...items, ...items];
 
   return (

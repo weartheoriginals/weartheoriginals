@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const panels = [
-  { src: "/custom/colors.jpeg", label: "Hand-Stitched Seams" },
-  { src: "/custom/design.jpeg", label: "Full-Grain Tanning" },
-  { src: "/custom/hardware.jpeg", label: "Solid Brass Hardware" },
-  { src: "/custom/stitching.jpeg", label: "The Finished Piece" },
+  { src: '/custom/colors.jpeg', label: 'Hand-Stitched Seams' },
+  { src: '/custom/design.jpeg', label: 'Full-Grain Tanning' },
+  { src: '/custom/hardware.jpeg', label: 'Solid Brass Hardware' },
+  { src: '/custom/stitching.jpeg', label: 'The Finished Piece' },
 ];
 
 export default function CraftScrollSection() {
@@ -24,10 +24,10 @@ export default function CraftScrollSection() {
 
       gsap.to(track, {
         x: -distance,
-        ease: "none",
+        ease: 'none',
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top top",
+          start: 'top top',
           end: () => `+=${distance}`,
           scrub: 1,
           pin: true,
@@ -42,13 +42,9 @@ export default function CraftScrollSection() {
   return (
     <section ref={sectionRef} className="relative overflow-hidden bg-espresso">
       <div ref={trackRef} className="flex h-screen w-max">
-        {panels.map((panel) => (
+        {panels.map(panel => (
           <div key={panel.src} className="relative h-screen w-screen shrink-0">
-            <img
-              src={panel.src}
-              alt={panel.label}
-              className="h-full w-full object-cover"
-            />
+            <img src={panel.src} alt={panel.label} className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-espresso/30" />
             <p className="absolute bottom-16 left-10 font-mono-label text-[12px] uppercase text-ivory drop-shadow-sm">
               {panel.label}
