@@ -1,23 +1,30 @@
-import { ProductCardData } from '@/components/product-card';
-import ProductDetailPanel from '@/components/product-detail-panel';
-import ProductGallery from '@/components/product-gallery';
-import ProductShelf from '@/components/product-shelf';
-import { getProductBySlug, getRelatedProducts } from '@/lib/queries/products';
-import type { ProductWithImages } from '@/lib/types';
-import { getProductImageUrl, PLACEHOLDER_IMAGE } from '@/lib/utils';
-import { notFound } from 'next/navigation';
+import { ProductCardData } from "@/components/product-card";
+import ProductDetailPanel from "@/components/product-detail-panel";
+import ProductGallery from "@/components/product-gallery";
+import ProductShelf from "@/components/product-shelf";
+import { getProductBySlug, getRelatedProducts } from "@/lib/queries/products";
+import type { ProductWithImages } from "@/lib/types";
+import { getProductImageUrl, PLACEHOLDER_IMAGE } from "@/lib/utils";
+import { notFound } from "next/navigation";
 
 function toProductCardData(product: ProductWithImages): ProductCardData {
-  const primaryImage = product.images.find(img => img.is_primary) ?? product.images[0];
+  const primaryImage =
+    product.images.find((img) => img.is_primary) ?? product.images[0];
   return {
     slug: product.slug,
     name: product.name,
     price: product.price,
-    imageUrl: primaryImage ? getProductImageUrl(primaryImage.image_url) : PLACEHOLDER_IMAGE,
+    imageUrl: primaryImage
+      ? getProductImageUrl(primaryImage.image_url)
+      : PLACEHOLDER_IMAGE,
   };
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
 
@@ -30,10 +37,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     return a.display_order - b.display_order;
   });
   const galleryImages =
-    sortedImages.length > 0 ? sortedImages.map(img => getProductImageUrl(img.image_url)) : [PLACEHOLDER_IMAGE];
+    sortedImages.length > 0
+      ? sortedImages.map((img) => getProductImageUrl(img.image_url))
+      : [PLACEHOLDER_IMAGE];
 
   const relatedProducts = product.category_id
-    ? (await getRelatedProducts(product.category_id, product.id)).map(toProductCardData)
+    ? (await getRelatedProducts(product.category_id, product.id)).map(
+        toProductCardData,
+      )
     : [];
 
   return (
@@ -46,7 +57,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             slug={product.slug}
             name={product.name}
             price={product.price}
-            description={product.description ?? ''}
+            description={product.description ?? ""}
             imageUrl={galleryImages[0]}
             variants={product.variants}
           />
@@ -54,7 +65,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </section>
       {relatedProducts.length > 0 && (
         <div className="border-t border-espresso/10">
-          <ProductShelf eyebrow="You May Also Like" title="Complete the Look" products={relatedProducts} />
+          <ProductShelf
+            eyebrow="You May Also Like"
+            title="Complete the Look"
+            products={relatedProducts}
+            size="compact"
+          />
         </div>
       )}
     </main>

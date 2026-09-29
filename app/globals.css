@@ -109,3 +109,36 @@ button:focus-visible {
   outline: 2px solid var(--color-saddle);
   outline-offset: 3px;
 }
+
+
+.btn-stitch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: top;
+  gap: 0.75rem;
+  padding: 1rem 1.75rem;
+  background: var(--color-espresso);
+  color: var(--color-ivory);
+  transition: background-color 0.3s ease;
+}
+.btn-stitch::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(247, 245, 241, 0.35);
+  pointer-events: none;
+  transition: border-color 0.3s ease;
+}
+.btn-stitch:hover {
+  background: var(--color-saddle);
+}
+.btn-stitch:hover::before {
+  border-color: rgba(247, 245, 241, 0.7);
+}
+.btn-arrow {
+  transition: transform 0.3s ease;
+}
+.btn-stitch:hover .btn-arrow {
+  transform: translateX(4px);
+}

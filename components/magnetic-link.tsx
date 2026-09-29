@@ -21,8 +21,8 @@ export default function MagneticLink({
 
   const handleMove = (e: React.MouseEvent) => {
     const rect = ref.current!.getBoundingClientRect();
-    x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
-    y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    x.set((e.clientX - rect.left - rect.width / 2) * 0.2);
+    y.set((e.clientY - rect.top - rect.height / 2) * 0.2);
   };
   const handleLeave = () => {
     x.set(0);

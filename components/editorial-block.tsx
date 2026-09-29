@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { motion } from 'motion/react';
-import MagneticLink from './magnetic-link';
-import StitchDivider from './stitch-divider';
+import { motion } from "motion/react";
+import MagneticLink from "./magnetic-link";
+import StitchDivider from "./stitch-divider";
 
 const textStagger = {
   hidden: {},
@@ -21,9 +21,9 @@ const fadeUp = {
 };
 
 const maskReveal = {
-  hidden: { y: '110%' },
+  hidden: { y: "110%" },
   show: {
-    y: '0%',
+    y: "0%",
     transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
@@ -50,9 +50,17 @@ export default function EditorialBlock({
   const hasButton = !!ctaLabel && !!href;
 
   const textContent = (
-    <motion.div variants={textStagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-10% 0px' }}>
+    <motion.div
+      variants={textStagger}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-10% 0px" }}
+    >
       {eyebrow && (
-        <motion.p variants={fadeUp} className="font-mono-label text-[11px] uppercase text-brass mb-4">
+        <motion.p
+          variants={fadeUp}
+          className="font-mono-label text-[11px] uppercase text-brass mb-4"
+        >
           {eyebrow}
         </motion.p>
       )}
@@ -67,12 +75,15 @@ export default function EditorialBlock({
         </motion.p>
       )}
       {hasButton && (
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} className="mt-8">
           <MagneticLink
             href={href!}
-            className="stitch-underline font-mono-label text-[12px] uppercase text-espresso inline-block mt-7"
+            className="btn-stitch font-mono-label text-[12px] uppercase"
           >
             {ctaLabel}
+            <span aria-hidden className="btn-arrow">
+              →
+            </span>
           </MagneticLink>
         </motion.div>
       )}
@@ -83,7 +94,9 @@ export default function EditorialBlock({
     return (
       <section>
         <StitchDivider />
-        <div className="px-6 md:px-16 py-16 md:py-24 max-w-2xl mx-auto text-center">{textContent}</div>
+        <div className="px-6 md:px-16 py-16 md:py-24 max-w-2xl mx-auto text-center">
+          {textContent}
+        </div>
       </section>
     );
   }
@@ -93,16 +106,20 @@ export default function EditorialBlock({
       <StitchDivider />
       <div
         className={`mx-auto max-w-6xl flex flex-col md:flex-row md:items-center gap-8 md:gap-14 px-6 md:px-16 py-12 md:py-20 ${
-          reverse ? 'md:flex-row-reverse' : ''
+          reverse ? "md:flex-row-reverse" : ""
         }`}
       >
         <div className="w-full md:w-1/2 min-w-0">
           <div className="relative aspect-4/3 overflow-hidden">
-            <img src={imageUrl} alt={imageAlt ?? title} className="h-full w-full object-cover object-center" />
+            <img
+              src={imageUrl}
+              alt={imageAlt ?? title}
+              className="h-full w-full object-cover object-center"
+            />
             <motion.div
               initial={{ scaleX: 1 }}
               whileInView={{ scaleX: 0 }}
-              viewport={{ once: true, margin: '-10% 0px' }}
+              viewport={{ once: true, margin: "-10% 0px" }}
               transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
               style={{ originX: reverse ? 1 : 0 }}
               className="absolute inset-0 bg-ivory"
