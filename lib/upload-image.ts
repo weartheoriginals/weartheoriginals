@@ -1,13 +1,19 @@
-import { supabaseClient } from '@/lib/supabase';
+import { supabaseClient } from "@/lib/supabase";
 
-export async function uploadToBucket(file: File, bucket: string, pathPrefix: string): Promise<string> {
-  const ext = file.name.split('.').pop();
+export async function uploadToBucket(
+  file: File,
+  bucket: string,
+  pathPrefix: string,
+): Promise<string> {
+  const ext = file.name.split(".").pop();
   const fileName = `${pathPrefix}/${crypto.randomUUID()}.${ext}`;
 
-  const { error: uploadError } = await supabaseClient.storage.from(bucket).upload(fileName, file, {
-    cacheControl: '3600',
-    upsert: false,
-  });
+  const { error: uploadError } = await supabaseClient.storage
+    .from(bucket)
+    .upload(fileName, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
 
   if (uploadError) {
     throw new Error(uploadError.message);
@@ -20,6 +26,16 @@ export async function uploadToBucket(file: File, bucket: string, pathPrefix: str
   return publicUrl;
 }
 
-export async function uploadToProductImagesBucket(file: File, pathPrefix: string): Promise<string> {
-  return uploadToBucket(file, 'product-images', pathPrefix);
+export async function uploadToProductImagesBucket(
+  file: File,
+  pathPrefix: string,
+): Promise<string> {
+  return uploadToBucket(file, "product-images", pathPrefix);
+}
+
+export async function uploadToSiteImagesBucket(
+  file: File,
+  pathPrefix: string,
+): Promise<string> {
+  return uploadToBucket(file, "site-assets", pathPrefix);
 }

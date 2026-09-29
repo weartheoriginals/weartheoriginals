@@ -1,14 +1,18 @@
-'use client';
+"use client";
 
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
-import { uploadToBucket } from '@/lib/upload-image';
-import { useEffect, useState } from 'react';
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { uploadToBucket, uploadToSiteImagesBucket } from "@/lib/upload-image";
+import { useEffect, useState } from "react";
 
-type CraftVideo = {
+type MediaType = "video" | "image";
+
+type CraftMedia = {
   id: string;
   title: string;
   caption: string | null;
-  video_url: string;
+  media_type: MediaType;
+  video_url: string | null;
+  image_url: string | null;
   display_order: number;
 };
 
@@ -18,82 +22,93 @@ async function authHeaders() {
     data: { session },
   } = await supabase.auth.getSession();
   return {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     Authorization: `Bearer ${session?.access_token}`,
   };
 }
 
 export default function AdminMaterialsPage() {
-  const [videos, setVideos] = useState<CraftVideo[]>([]);
+  const [items, setItems] = useState<CraftMedia[]>([]);
   const [loading, setLoading] = useState(true);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const [title, setTitle] = useState('');
-  const [caption, setCaption] = useState('');
+  const [mediaType, setMediaType] = useState<MediaType>("video");
+  const [title, setTitle] = useState("");
+  const [caption, setCaption] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editCaption, setEditCaption] = useState('');
+  const [editMediaType, setEditMediaType] = useState<MediaType>("video");
+  const [editTitle, setEditTitle] = useState("");
+  const [editCaption, setEditCaption] = useState("");
   const [editFile, setEditFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
-  async function fetchVideos() {
+  async function fetchItems() {
     setLoading(true);
-    const res = await fetch('/api/admin/craft-videos');
+    const res = await fetch("/api/admin/craft-videos");
     const data = await res.json();
-    if (data.success) setVideos(data.data);
+    if (data.success) setItems(data.data);
     setLoading(false);
   }
 
   useEffect(() => {
-    fetchVideos();
+    fetchItems();
   }, []);
 
   function showSuccess(msg: string) {
     setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(''), 3000);
+    setTimeout(() => setSuccessMsg(""), 3000);
   }
 
   function handleFilePick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
     setFile(f);
-    setError('');
+    setError("");
   }
 
   async function handleUpload() {
     if (!title.trim()) {
-      setError('Title is required');
+      setError("Title is required");
       return;
     }
     if (!file) {
-      setError('Pick a video file');
+      setError(`Pick a${mediaType === "image" ? "n image" : " video"} file`);
       return;
     }
     setUploading(true);
-    setError('');
+    setError("");
     try {
-      const video_url = await uploadToBucket(file, 'site-videos', 'craft');
+      const url =
+        mediaType === "video"
+          ? await uploadToBucket(file, "site-videos", "craft")
+          : await uploadToSiteImagesBucket(file, "craft");
+
       const headers = await authHeaders();
-      const res = await fetch('/api/admin/craft-videos', {
-        method: 'POST',
+      const res = await fetch("/api/admin/craft-videos", {
+        method: "POST",
         headers,
-        body: JSON.stringify({ title: title.trim(), caption: caption.trim() || null, video_url }),
+        body: JSON.stringify({
+          title: title.trim(),
+          caption: caption.trim() || null,
+          media_type: mediaType,
+          ...(mediaType === "video" ? { video_url: url } : { image_url: url }),
+        }),
       });
       const data = await res.json();
       if (!data.success) {
         setError(data.error);
         return;
       }
-      setVideos(prev => [...prev, data.data]);
-      setTitle('');
-      setCaption('');
+      setItems((prev) => [...prev, data.data]);
+      setTitle("");
+      setCaption("");
       setFile(null);
-      showSuccess('Video added');
+      showSuccess(`${mediaType === "image" ? "Image" : "Video"} added`);
     } catch (e: any) {
       setError(`Upload failed: ${e.message}`);
     } finally {
@@ -103,23 +118,27 @@ export default function AdminMaterialsPage() {
 
   async function handleDelete(id: string) {
     const headers = await authHeaders();
-    const res = await fetch(`/api/admin/craft-videos/${id}`, { method: 'DELETE', headers });
+    const res = await fetch(`/api/admin/craft-videos/${id}`, {
+      method: "DELETE",
+      headers,
+    });
     const data = await res.json();
     if (data.success) {
-      setVideos(prev => prev.filter(v => v.id !== id));
+      setItems((prev) => prev.filter((v) => v.id !== id));
       setDeletingId(null);
-      showSuccess('Video deleted');
+      showSuccess("Deleted");
     } else {
       setError(data.error);
     }
   }
 
-  function openEdit(v: CraftVideo) {
+  function openEdit(v: CraftMedia) {
     setEditingId(v.id);
+    setEditMediaType(v.media_type);
     setEditTitle(v.title);
-    setEditCaption(v.caption ?? '');
+    setEditCaption(v.caption ?? "");
     setEditFile(null);
-    setError('');
+    setError("");
   }
 
   function cancelEdit() {
@@ -129,24 +148,30 @@ export default function AdminMaterialsPage() {
 
   async function handleSaveEdit(id: string) {
     if (!editTitle.trim()) {
-      setError('Title is required');
+      setError("Title is required");
       return;
     }
     setSavingEdit(true);
-    setError('');
+    setError("");
     try {
-      let video_url: string | undefined;
+      let urlPatch: Record<string, string> = {};
       if (editFile) {
-        video_url = await uploadToBucket(editFile, 'site-videos', 'craft');
+        const url =
+          editMediaType === "video"
+            ? await uploadToBucket(editFile, "site-videos", "craft")
+            : await uploadToSiteImagesBucket(editFile, "craft");
+        urlPatch =
+          editMediaType === "video" ? { video_url: url } : { image_url: url };
       }
       const headers = await authHeaders();
       const res = await fetch(`/api/admin/craft-videos/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers,
         body: JSON.stringify({
           title: editTitle.trim(),
           caption: editCaption.trim() || null,
-          ...(video_url ? { video_url } : {}),
+          media_type: editMediaType,
+          ...urlPatch,
         }),
       });
       const data = await res.json();
@@ -154,9 +179,9 @@ export default function AdminMaterialsPage() {
         setError(data.error);
         return;
       }
-      setVideos(prev => prev.map(v => (v.id === id ? data.data : v)));
+      setItems((prev) => prev.map((v) => (v.id === id ? data.data : v)));
       setEditingId(null);
-      showSuccess('Video updated');
+      showSuccess("Updated");
     } catch (e: any) {
       setError(`Update failed: ${e.message}`);
     } finally {
@@ -164,47 +189,91 @@ export default function AdminMaterialsPage() {
     }
   }
 
+  const acceptFor = (t: MediaType) =>
+    t === "video"
+      ? "video/mp4,video/webm,video/quicktime"
+      : "image/jpeg,image/png,image/webp";
+
   return (
     <div>
       <div className="mb-6">
-        <h2 className="font-display text-2xl text-espresso mb-1">Materials Page Videos</h2>
-        <p className="text-sm text-umber">{videos.length} videos · shown in upload order on /materials</p>
+        <h2 className="font-display text-2xl text-espresso mb-1">
+          Materials Page Media
+        </h2>
+        <p className="text-sm text-umber">
+          {items.length} items · shown in upload order on /materials
+        </p>
       </div>
 
       {successMsg && (
-        <div className="px-4 py-3 mb-4 bg-green-50 border border-green-200 text-sm text-green-700">{successMsg}</div>
+        <div className="px-4 py-3 mb-4 bg-green-50 border border-green-200 text-sm text-green-700">
+          {successMsg}
+        </div>
       )}
-      {error && <div className="px-4 py-3 mb-4 bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>}
+      {error && (
+        <div className="px-4 py-3 mb-4 bg-red-50 border border-red-200 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Upload form */}
       <div className="border border-(--hairline) bg-ivory p-6 mb-8 max-w-2xl">
-        <p className="font-mono-label text-[11px] uppercase text-brass mb-4">Add Video</p>
+        <p className="font-mono-label text-[11px] uppercase text-brass mb-4">
+          Add Media
+        </p>
+
+        <div className="flex gap-2 mb-5">
+          {(["video", "image"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => {
+                setMediaType(t);
+                setFile(null);
+              }}
+              className={`px-4 py-2 font-mono-label text-xs uppercase tracking-widest border transition-colors ${
+                mediaType === t
+                  ? "bg-espresso text-ivory border-espresso"
+                  : "border-(--hairline) text-umber hover:border-espresso hover:text-espresso"
+              }`}
+            >
+              {t === "video" ? "Video" : "Image"}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-4">
           <div>
-            <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">Title *</label>
+            <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">
+              Title *
+            </label>
             <input
               type="text"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Hand-stitching the collar"
               className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
             />
           </div>
           <div>
-            <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">Caption</label>
+            <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">
+              Caption
+            </label>
             <textarea
               value={caption}
-              onChange={e => setCaption(e.target.value)}
+              onChange={(e) => setCaption(e.target.value)}
               rows={2}
               placeholder="Short line describing the process shown"
               className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle resize-none"
             />
           </div>
           <div>
-            <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">Video File *</label>
+            <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">
+              {mediaType === "video" ? "Video File *" : "Image File *"}
+            </label>
             <input
               type="file"
-              accept="video/mp4,video/webm,video/quicktime"
+              accept={acceptFor(mediaType)}
               onChange={handleFilePick}
               className="text-sm text-umber"
             />
@@ -215,47 +284,74 @@ export default function AdminMaterialsPage() {
             disabled={uploading}
             className="bg-espresso text-ivory px-5 py-2.5 font-mono-label text-xs uppercase tracking-widest hover:bg-saddle transition-colors disabled:opacity-50"
           >
-            {uploading ? 'Uploading…' : '+ Add Video'}
+            {uploading
+              ? "Uploading…"
+              : `+ Add ${mediaType === "video" ? "Video" : "Image"}`}
           </button>
         </div>
       </div>
 
       {/* List */}
       <div className="border border-(--hairline) bg-ivory max-w-2xl">
-        <div className="grid grid-cols-[1fr_1fr_80px] px-4 py-3 bg-black/2 border-b border-(--hairline) gap-3">
-          {['Title', 'Preview', 'Actions'].map(h => (
-            <p key={h} className="font-mono-label text-[0.65rem] uppercase tracking-wider text-umber">
+        <div className="grid grid-cols-[1fr_1fr_140px] px-4 py-3 bg-black/2 border-b border-(--hairline) gap-3">
+          {["Title", "Preview", "Actions"].map((h) => (
+            <p
+              key={h}
+              className="font-mono-label text-[0.65rem] uppercase tracking-wider text-umber"
+            >
               {h}
             </p>
           ))}
         </div>
         {loading ? (
           <p className="p-6 text-sm text-umber">Loading…</p>
-        ) : videos.length === 0 ? (
-          <p className="p-6 text-sm text-umber text-center">No videos yet</p>
+        ) : items.length === 0 ? (
+          <p className="p-6 text-sm text-umber text-center">No media yet</p>
         ) : (
-          videos.map((v, i) => (
-            <div key={v.id} className={`px-4 py-3 ${i < videos.length - 1 ? 'border-b border-(--hairline)' : ''}`}>
+          items.map((v, i) => (
+            <div
+              key={v.id}
+              className={`px-4 py-3 ${i < items.length - 1 ? "border-b border-(--hairline)" : ""}`}
+            >
               {editingId === v.id ? (
                 <div className="space-y-3">
+                  <div className="flex gap-2">
+                    {(["video", "image"] as const).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setEditMediaType(t)}
+                        className={`px-3 py-1.5 font-mono-label text-[0.65rem] uppercase tracking-widest border transition-colors ${
+                          editMediaType === t
+                            ? "bg-espresso text-ivory border-espresso"
+                            : "border-(--hairline) text-umber"
+                        }`}
+                      >
+                        {t === "video" ? "Video" : "Image"}
+                      </button>
+                    ))}
+                  </div>
                   <input
                     type="text"
                     value={editTitle}
-                    onChange={e => setEditTitle(e.target.value)}
+                    onChange={(e) => setEditTitle(e.target.value)}
                     className="w-full border border-(--hairline) bg-ivory px-3 py-2 text-sm text-espresso focus:outline-none focus:border-saddle"
                   />
                   <textarea
                     value={editCaption}
-                    onChange={e => setEditCaption(e.target.value)}
+                    onChange={(e) => setEditCaption(e.target.value)}
                     rows={2}
                     className="w-full border border-(--hairline) bg-ivory px-3 py-2 text-sm text-espresso focus:outline-none focus:border-saddle resize-none"
                   />
                   <div>
-                    <label className="text-xs text-umber block mb-1">Replace video (optional)</label>
+                    <label className="text-xs text-umber block mb-1">
+                      Replace {editMediaType === "video" ? "video" : "image"}{" "}
+                      (optional)
+                    </label>
                     <input
                       type="file"
-                      accept="video/mp4,video/webm,video/quicktime"
-                      onChange={e => setEditFile(e.target.files?.[0] ?? null)}
+                      accept={acceptFor(editMediaType)}
+                      onChange={(e) => setEditFile(e.target.files?.[0] ?? null)}
                       className="text-sm text-umber"
                     />
                   </div>
@@ -265,7 +361,7 @@ export default function AdminMaterialsPage() {
                       disabled={savingEdit}
                       className="bg-espresso text-ivory px-4 py-2 font-mono-label text-xs uppercase tracking-widest hover:bg-saddle transition-colors disabled:opacity-50"
                     >
-                      {savingEdit ? 'Saving…' : 'Save'}
+                      {savingEdit ? "Saving…" : "Save"}
                     </button>
                     <button
                       onClick={cancelEdit}
@@ -279,14 +375,37 @@ export default function AdminMaterialsPage() {
                 <div className="grid grid-cols-[1fr_1fr_140px] gap-3 items-center">
                   <div>
                     <p className="text-sm text-espresso">{v.title}</p>
-                    {v.caption && <p className="text-xs text-umber truncate">{v.caption}</p>}
+                    <p className="text-[0.65rem] font-mono-label uppercase tracking-wider text-brass mt-0.5">
+                      {v.media_type}
+                    </p>
+                    {v.caption && (
+                      <p className="text-xs text-umber truncate">{v.caption}</p>
+                    )}
                   </div>
-                  <video src={v.video_url} className="w-full h-14 object-cover bg-black/5" muted />
+                  {v.media_type === "video" ? (
+                    <video
+                      src={v.video_url ?? undefined}
+                      className="w-full h-14 object-cover bg-black/5"
+                      muted
+                    />
+                  ) : (
+                    <img
+                      src={v.image_url ?? undefined}
+                      alt={v.title}
+                      className="w-full h-14 object-cover bg-black/5"
+                    />
+                  )}
                   <div className="flex gap-3">
-                    <button onClick={() => openEdit(v)} className="text-xs text-umber hover:text-saddle text-left">
+                    <button
+                      onClick={() => openEdit(v)}
+                      className="text-xs text-umber hover:text-saddle text-left"
+                    >
                       Edit
                     </button>
-                    <button onClick={() => setDeletingId(v.id)} className="text-xs text-umber hover:text-red-600 text-left">
+                    <button
+                      onClick={() => setDeletingId(v.id)}
+                      className="text-xs text-umber hover:text-red-600 text-left"
+                    >
                       Delete
                     </button>
                   </div>
@@ -300,7 +419,9 @@ export default function AdminMaterialsPage() {
       {deletingId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-ivory p-6 max-w-sm w-full text-center">
-            <h3 className="font-display text-lg text-espresso mb-2">Delete this video?</h3>
+            <h3 className="font-display text-lg text-espresso mb-2">
+              Delete this item?
+            </h3>
             <p className="text-sm text-umber mb-4">This cannot be undone.</p>
             <div className="flex gap-3 justify-center">
               <button
