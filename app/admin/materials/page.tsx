@@ -46,6 +46,7 @@ export default function AdminMaterialsPage() {
   const [editCaption, setEditCaption] = useState("");
   const [editFile, setEditFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [filter, setFilter] = useState<"all" | MediaType>("all");
 
   async function fetchItems() {
     setLoading(true);
@@ -151,6 +152,13 @@ export default function AdminMaterialsPage() {
       setError("Title is required");
       return;
     }
+
+    const original = items.find((v) => v.id === id);
+    if (original && original.media_type !== editMediaType && !editFile) {
+      setError(`Pick a new ${editMediaType} file to switch type`);
+      return;
+    }
+
     setSavingEdit(true);
     setError("");
     try {
@@ -193,6 +201,10 @@ export default function AdminMaterialsPage() {
     t === "video"
       ? "video/mp4,video/webm,video/quicktime"
       : "image/jpeg,image/png,image/webp";
+
+  const visibleItems = items.filter(
+    (v) => filter === "all" || v.media_type === filter,
+  );
 
   return (
     <div>
@@ -291,9 +303,30 @@ export default function AdminMaterialsPage() {
         </div>
       </div>
 
+      <div className="flex gap-2 mb-3 max-w-2xl">
+        {(["all", "video", "image"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setFilter(t)}
+            className={`px-4 py-2 font-mono-label text-xs uppercase tracking-widest border transition-colors ${
+              filter === t
+                ? "bg-espresso text-ivory border-espresso"
+                : "border-(--hairline) text-umber hover:border-espresso hover:text-espresso"
+            }`}
+          >
+            {t === "all" ? "All" : t === "video" ? "Videos" : "Images"} (
+            {t === "all"
+              ? items.length
+              : items.filter((v) => v.media_type === t).length}
+            )
+          </button>
+        ))}
+      </div>
+
       {/* List */}
       <div className="border border-(--hairline) bg-ivory max-w-2xl">
-        <div className="grid grid-cols-[1fr_1fr_140px] px-4 py-3 bg-black/2 border-b border-(--hairline) gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_140px] px-4 py-3 bg-black/2 border-b border-(--hairline) gap-3">
           {["Title", "Preview", "Actions"].map((h) => (
             <p
               key={h}
@@ -305,13 +338,13 @@ export default function AdminMaterialsPage() {
         </div>
         {loading ? (
           <p className="p-6 text-sm text-umber">Loading…</p>
-        ) : items.length === 0 ? (
+        ) : visibleItems.length === 0 ? (
           <p className="p-6 text-sm text-umber text-center">No media yet</p>
         ) : (
-          items.map((v, i) => (
+          visibleItems.map((v, i) => (
             <div
               key={v.id}
-              className={`px-4 py-3 ${i < items.length - 1 ? "border-b border-(--hairline)" : ""}`}
+              className={`px-4 py-3 ${i < visibleItems.length - 1 ? "border-b border-(--hairline)" : ""}`}
             >
               {editingId === v.id ? (
                 <div className="space-y-3">
@@ -372,21 +405,25 @@ export default function AdminMaterialsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-[1fr_1fr_140px] gap-3 items-center">
+                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_140px] gap-3 items-center">
                   <div>
                     <p className="text-sm text-espresso">{v.title}</p>
                     <p className="text-[0.65rem] font-mono-label uppercase tracking-wider text-brass mt-0.5">
                       {v.media_type}
                     </p>
                     {v.caption && (
-                      <p className="text-xs text-umber truncate">{v.caption}</p>
+                      <p className="text-xs text-umber line-clamp-2 wrap-break-word">
+                        {v.caption}
+                      </p>
                     )}
                   </div>
                   {v.media_type === "video" ? (
                     <video
-                      src={v.video_url ?? undefined}
-                      className="w-full h-14 object-cover bg-black/5"
+                      src={v.video_url ? `${v.video_url}#t=0.1` : undefined}
+                      preload="metadata"
                       muted
+                      playsInline
+                      className="w-full h-14 object-cover bg-black/5"
                     />
                   ) : (
                     <img
