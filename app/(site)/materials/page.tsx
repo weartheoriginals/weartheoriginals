@@ -17,7 +17,7 @@ export default async function MaterialsPage() {
           Materials
         </p>
         <h1 className="font-display font-light text-4xl md:text-5xl text-espresso max-w-2xl mx-auto leading-tight">
-          Full-grain, vegetable-tanned, built to age well.
+          THE FOUNDATION OF EVERY ORIGINAL
         </h1>
       </section>
 
