@@ -1,6 +1,7 @@
 import EditorialBlock from "@/components/editorial-block";
 import Hero from "@/components/hero";
 import { ProductCardData } from "@/components/product-card";
+import ScrollExpandImage from "@/components/scroll-expand-image";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { ProductWithImages } from "@/lib/types";
 import { getProductImageUrl, PLACEHOLDER_IMAGE } from "@/lib/utils";
@@ -8,8 +9,7 @@ import { getProductImageUrl, PLACEHOLDER_IMAGE } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 function toProductCardData(product: ProductWithImages): ProductCardData {
-  const primaryImage =
-    product.images.find((img) => img.is_primary) ?? product.images[0];
+  const primaryImage = product.images.find((img) => img.is_primary) ?? product.images[0];
   return {
     slug: product.slug,
     name: product.name,
@@ -41,6 +41,7 @@ export default async function HomePage() {
   return (
     <main>
       <Hero />
+      <ScrollExpandImage />
       {sections.map((section, index) => (
         <EditorialBlock
           key={section.id}
