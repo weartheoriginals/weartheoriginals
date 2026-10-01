@@ -41,6 +41,7 @@ export interface ProductImage {
   image_url: string;
   is_primary: boolean;
   display_order: number;
+  variant_id: string | null;
 }
 
 export interface ProductVariant {
