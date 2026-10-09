@@ -31,7 +31,7 @@ function Heading({ children }: { children: React.ReactNode }) {
 
 function Bullets({ items }: { items: string[] }) {
   return (
-    <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-umber marker:text-brass">
+    <ul className="mt-4 list-disc space-y-2 wrap-break-word pl-5 text-sm text-umber marker:text-brass">
       {items.map((item) => (
         <li key={item}>{item}</li>
       ))}
@@ -41,7 +41,7 @@ function Bullets({ items }: { items: string[] }) {
 
 function Specs({ rows }: { rows: [string, string][] }) {
   return (
-    <dl className="space-y-5">
+    <dl className="space-y-5 wrap-break-word">
       {rows.map(([label, value]) => (
         <div key={label}>
           <dt className="text-sm text-espresso">{label}</dt>
@@ -123,15 +123,13 @@ export default function ProductTabs({
       >
         {tab === "description" && (
           <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-14">
-            <div>
+            <div className="min-w-0">
               <Heading>Description</Heading>
-              <p className="mt-4 max-w-md text-sm leading-relaxed text-umber">
-                {description}
-              </p>
+              <p className="mt-4 max-w-md wrap-break-word text-sm leading-relaxed text-umber"></p>
               {features && features.length > 0 && <Bullets items={features} />}
             </div>
             {specs.length > 0 && (
-              <div className="lg:border-l lg:border-espresso/10 lg:pl-14">
+              <div className="min-w-0 lg:border-l lg:border-espresso/10 lg:pl-14">
                 <Specs rows={specs} />
               </div>
             )}
@@ -183,12 +181,9 @@ export default function ProductTabs({
                 />
               </div>
             </div>
-            <div>
+            <div className="min-w-0">
               <Heading>Returns</Heading>
-              <p className="mt-4 text-sm leading-relaxed text-umber">
-                {returnPolicy ||
-                  "Contact us if something is not right and we will help."}
-              </p>
+              <p className="mt-4 wrap-break-word text-sm leading-relaxed text-umber"></p>
             </div>
           </div>
         )}

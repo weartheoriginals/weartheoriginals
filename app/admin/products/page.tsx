@@ -1,34 +1,39 @@
-'use client';
+"use client";
 
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
-import type { Category, ProductImage, ProductVariantWithImage, ProductWithDetails } from '@/lib/types';
-import { uploadToProductImagesBucket } from '@/lib/upload-image';
-import { useEffect, useState } from 'react';
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import type {
+  Category,
+  ProductImage,
+  ProductVariant,
+  ProductWithDetails,
+} from "@/lib/types";
+import { uploadToProductImagesBucket } from "@/lib/upload-image";
+import { useEffect, useState } from "react";
 
-type ModalMode = 'add' | 'edit' | null;
-type Tab = 'details' | 'images' | 'variants';
+type ModalMode = "add" | "edit" | null;
+type Tab = "details" | "images" | "variants";
 
 const emptyDetails = {
-  name: '',
-  category_id: '',
-  price: '',
-  description: '',
+  name: "",
+  category_id: "",
+  price: "",
+  description: "",
   is_featured: false,
   is_active: true,
-  brand_name: '',
-  materials: '',
-  features: '',
-  processing_days_min: '',
-  processing_days_max: '',
-  return_policy: '',
-  shipping_from: '',
+  brand_name: "",
+  materials: "",
+  features: "",
+  processing_days_min: "",
+  processing_days_max: "",
+  return_policy: "",
+  shipping_from: "",
   free_delivery: true,
 };
 
 function formatPrice(amount: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 0,
   }).format(amount);
 }
@@ -39,7 +44,7 @@ async function authHeaders() {
     data: { session },
   } = await supabase.auth.getSession();
   return {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     Authorization: `Bearer ${session?.access_token}`,
   };
 }
@@ -48,29 +53,37 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState("");
 
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [activeTab, setActiveTab] = useState<Tab>('details');
-  const [editingProduct, setEditingProduct] = useState<ProductWithDetails | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("details");
+  const [editingProduct, setEditingProduct] = useState<ProductWithDetails | null>(
+    null,
+  );
 
   const [details, setDetails] = useState(emptyDetails);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [images, setImages] = useState<ProductImage[]>([]);
-  const [variants, setVariants] = useState<ProductVariantWithImage[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [variantForm, setVariantForm] = useState({ attribute_name: '', attribute_value: '', stock_quantity: '0' });
+  const [uploadColorId, setUploadColorId] = useState("");
+  const [variantForm, setVariantForm] = useState({
+    attribute_name: "",
+    attribute_value: "",
+    stock_quantity: "0",
+  });
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [savingVariant, setSavingVariant] = useState(false);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState('');
+  const [deleteError, setDeleteError] = useState("");
 
-  async function fetchProducts() {
-    setLoading(true);
+  async function fetchProducts(quiet = false) {
+    if (!quiet) setLoading(true);
     const headers = await authHeaders();
-    const res = await fetch('/api/admin/products?limit=50', { headers });
+    const res = await fetch("/api/admin/products?limit=50", { headers });
     const data = await res.json();
     if (data.success) setProducts(data.data.data);
     setLoading(false);
@@ -78,7 +91,7 @@ export default function AdminProductsPage() {
 
   async function fetchCategories() {
     const headers = await authHeaders();
-    const res = await fetch('/api/admin/categories', { headers });
+    const res = await fetch("/api/admin/categories", { headers });
     const data = await res.json();
     if (data.success) setCategories(data.data);
   }
@@ -90,24 +103,26 @@ export default function AdminProductsPage() {
 
   function showSuccess(msg: string) {
     setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(''), 3000);
+    setTimeout(() => setSuccessMsg(""), 3000);
   }
 
   function detailsFromProduct(p: ProductWithDetails) {
     return {
       name: p.name,
-      category_id: p.category_id ?? '',
+      category_id: p.category_id ?? "",
       price: String(p.price),
-      description: p.description ?? '',
+      description: p.description ?? "",
       is_featured: p.is_featured,
       is_active: p.is_active,
-      brand_name: p.brand_name ?? '',
-      materials: p.materials ?? '',
-      features: (p.features ?? []).join('\n'),
-      processing_days_min: p.processing_days_min !== null ? String(p.processing_days_min) : '',
-      processing_days_max: p.processing_days_max !== null ? String(p.processing_days_max) : '',
-      return_policy: p.return_policy ?? '',
-      shipping_from: p.shipping_from ?? '',
+      brand_name: p.brand_name ?? "",
+      materials: p.materials ?? "",
+      features: (p.features ?? []).join("\n"),
+      processing_days_min:
+        p.processing_days_min !== null ? String(p.processing_days_min) : "",
+      processing_days_max:
+        p.processing_days_max !== null ? String(p.processing_days_max) : "",
+      return_policy: p.return_policy ?? "",
+      shipping_from: p.shipping_from ?? "",
       free_delivery: p.free_delivery,
     };
   }
@@ -117,25 +132,28 @@ export default function AdminProductsPage() {
     setEditingProduct(null);
     setImages([]);
     setVariants([]);
-    setError('');
-    setActiveTab('details');
-    setModalMode('add');
+    setUploadColorId("");
+    setError("");
+    setActiveTab("details");
+    setModalMode("add");
   }
 
   function openEdit(p: ProductWithDetails) {
     setDetails(detailsFromProduct(p));
     setEditingProduct(p);
     setImages(p.images ?? []);
-    setVariants((p.variants as ProductVariantWithImage[]) ?? []);
-    setError('');
-    setActiveTab('details');
-    setModalMode('edit');
+    setVariants(p.variants ?? []);
+    setUploadColorId("");
+    setEditingVariantId(null);
+    setError("");
+    setActiveTab("details");
+    setModalMode("edit");
   }
 
   function closeModal() {
     setModalMode(null);
     setEditingProduct(null);
-    setError('');
+    setError("");
   }
 
   function buildPayload() {
@@ -149,11 +167,13 @@ export default function AdminProductsPage() {
       brand_name: details.brand_name.trim() || null,
       materials: details.materials.trim() || null,
       features: details.features
-        .split('\n')
-        .map(f => f.trim())
+        .split("\n")
+        .map((f) => f.trim())
         .filter(Boolean),
-      processing_days_min: details.processing_days_min === '' ? null : details.processing_days_min,
-      processing_days_max: details.processing_days_max === '' ? null : details.processing_days_max,
+      processing_days_min:
+        details.processing_days_min === "" ? null : details.processing_days_min,
+      processing_days_max:
+        details.processing_days_max === "" ? null : details.processing_days_max,
       return_policy: details.return_policy.trim() || null,
       shipping_from: details.shipping_from.trim() || null,
       free_delivery: details.free_delivery,
@@ -162,20 +182,20 @@ export default function AdminProductsPage() {
 
   async function handleSaveDetails() {
     setSaving(true);
-    setError('');
+    setError("");
 
     if (!details.name.trim()) {
-      setError('Name is required');
+      setError("Name is required");
       setSaving(false);
       return;
     }
     if (!details.category_id) {
-      setError('Category is required');
+      setError("Category is required");
       setSaving(false);
       return;
     }
-    if (details.price === '' || isNaN(parseFloat(details.price))) {
-      setError('A valid price is required');
+    if (details.price === "" || isNaN(parseFloat(details.price))) {
+      setError("A valid price is required");
       setSaving(false);
       return;
     }
@@ -185,7 +205,7 @@ export default function AdminProductsPage() {
 
     if (editingProduct) {
       const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers,
         body: JSON.stringify(payload),
       });
@@ -197,10 +217,10 @@ export default function AdminProductsPage() {
       }
       setEditingProduct(data.data);
       fetchProducts();
-      showSuccess('Product updated');
+      showSuccess("Product updated");
     } else {
-      const res = await fetch('/api/admin/products', {
-        method: 'POST',
+      const res = await fetch("/api/admin/products", {
+        method: "POST",
         headers,
         body: JSON.stringify(payload),
       });
@@ -212,86 +232,136 @@ export default function AdminProductsPage() {
       }
       // Product now exists — switch into edit mode so Images/Variants tabs unlock
       setEditingProduct({ ...data.data, category: null, images: [], variants: [] });
-      setModalMode('edit');
+      setModalMode("edit");
       fetchProducts();
-      showSuccess('Product added — now add images and variants');
+      showSuccess("Product added — now add images and variants");
     }
   }
+
+  const colorVariants = variants.filter((v) => /^colou?r$/i.test(v.attribute_name));
 
   async function handleImagePick(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0 || !editingProduct) return;
     setUploadingImage(true);
-    setError('');
+    setError("");
+
     const headers = await authHeaders();
     let hasPrimary = images.length > 0;
     const uploaded: ProductImage[] = [];
+
     for (const file of files) {
       try {
-        const image_url = await uploadToProductImagesBucket(file, 'products');
+        const image_url = await uploadToProductImagesBucket(file, "products");
         const res = await fetch(`/api/admin/products/${editingProduct.id}/images`, {
-          method: 'POST',
+          method: "POST",
           headers,
-          body: JSON.stringify({ image_url, is_primary: !hasPrimary }),
+          body: JSON.stringify({
+            image_url,
+            is_primary: !hasPrimary,
+            variant_id: uploadColorId || null,
+          }),
         });
+
         const data = await res.json();
         if (!data.success) {
           setError(data.error);
           continue;
         }
+
         hasPrimary = true;
         uploaded.push(data.data);
       } catch (e: any) {
         setError(`Image upload failed (${file.name}): ${e.message}`);
       }
     }
-    if (uploaded.length > 0) setImages(prev => [...prev, ...uploaded]);
+
+    if (uploaded.length > 0) setImages((prev) => [...prev, ...uploaded]);
+    fetchProducts(true);
     setUploadingImage(false);
-    e.target.value = '';
+    e.target.value = "";
   }
 
   async function handleSetPrimary(imageId: string) {
     if (!editingProduct) return;
-    setError('');
+    setError("");
     const headers = await authHeaders();
-    const res = await fetch(`/api/admin/products/${editingProduct.id}/images?image_id=${imageId}`, {
-      method: 'PUT',
-      headers,
-    });
+    const res = await fetch(
+      `/api/admin/products/${editingProduct.id}/images?image_id=${imageId}`,
+      {
+        method: "PUT",
+        headers,
+      },
+    );
     const data = await res.json();
     if (!data.success) {
       setError(data.error);
       return;
     }
-    setImages(prev => prev.map(img => ({ ...img, is_primary: img.id === imageId })));
+    setImages((prev) =>
+      prev.map((img) => ({ ...img, is_primary: img.id === imageId })),
+    );
+    fetchProducts(true);
+  }
+
+  async function handleImageColor(imageId: string, variantId: string) {
+    if (!editingProduct) return;
+    setError("");
+    const headers = await authHeaders();
+    const res = await fetch(
+      `/api/admin/products/${editingProduct.id}/images?image_id=${imageId}`,
+      {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ variant_id: variantId || null }),
+      },
+    );
+    const data = await res.json();
+    if (!data.success) {
+      setError(data.error);
+      return;
+    }
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId ? { ...img, variant_id: variantId || null } : img,
+      ),
+    );
+    fetchProducts(true);
   }
 
   async function handleDeleteImage(imageId: string) {
     if (!editingProduct) return;
     const headers = await authHeaders();
-    const res = await fetch(`/api/admin/products/${editingProduct.id}/images?image_id=${imageId}`, {
-      method: 'DELETE',
-      headers,
-    });
+    const res = await fetch(
+      `/api/admin/products/${editingProduct.id}/images?image_id=${imageId}`,
+      {
+        method: "DELETE",
+        headers,
+      },
+    );
     const data = await res.json();
     if (data.success) {
-      setImages(prev => prev.filter(img => img.id !== imageId));
+      setImages((prev) => prev.filter((img) => img.id !== imageId));
+      fetchProducts(true);
     } else {
       setError(data.error);
     }
   }
 
-  async function handleAddVariant() {
+  async function handleSaveVariant() {
     if (!editingProduct) return;
     if (!variantForm.attribute_name.trim() || !variantForm.attribute_value.trim()) {
-      setError('Attribute name and value are required');
+      setError("Attribute name and value are required");
       return;
     }
     setSavingVariant(true);
-    setError('');
+    setError("");
     const headers = await authHeaders();
-    const res = await fetch(`/api/admin/products/${editingProduct.id}/variants`, {
-      method: 'POST',
+    const url =
+      `/api/admin/products/${editingProduct.id}/variants` +
+      (editingVariantId ? `?variant_id=${editingVariantId}` : "");
+    const res = await fetch(url, {
+      method: editingVariantId ? "PUT" : "POST",
       headers,
       body: JSON.stringify(variantForm),
     });
@@ -301,29 +371,66 @@ export default function AdminProductsPage() {
       setError(data.error);
       return;
     }
-    setVariants(prev => [...prev, data.data]);
-    setVariantForm({ attribute_name: variantForm.attribute_name, attribute_value: '', stock_quantity: '0' });
+    setVariants((prev) =>
+      editingVariantId
+        ? prev.map((v) => (v.id === editingVariantId ? data.data : v))
+        : [...prev, data.data],
+    );
+    setEditingVariantId(null);
+    setVariantForm({
+      attribute_name: variantForm.attribute_name,
+      attribute_value: "",
+      stock_quantity: "0",
+    });
+    fetchProducts(true);
+  }
+
+  function startEditVariant(v: ProductVariant) {
+    setEditingVariantId(v.id);
+    setVariantForm({
+      attribute_name: v.attribute_name,
+      attribute_value: v.attribute_value,
+      stock_quantity: String(v.stock_quantity),
+    });
+  }
+
+  function cancelEditVariant() {
+    setEditingVariantId(null);
+    setVariantForm({ attribute_name: "", attribute_value: "", stock_quantity: "0" });
   }
 
   async function handleDeleteVariant(variantId: string) {
     if (!editingProduct) return;
     const headers = await authHeaders();
-    const res = await fetch(`/api/admin/products/${editingProduct.id}/variants?variant_id=${variantId}`, {
-      method: 'DELETE',
-      headers,
-    });
+    const res = await fetch(
+      `/api/admin/products/${editingProduct.id}/variants?variant_id=${variantId}`,
+      {
+        method: "DELETE",
+        headers,
+      },
+    );
     const data = await res.json();
     if (data.success) {
-      setVariants(prev => prev.filter(v => v.id !== variantId));
+      setVariants((prev) => prev.filter((v) => v.id !== variantId));
+      setUploadColorId((cur) => (cur === variantId ? "" : cur));
+      setImages((prev) =>
+        prev.map((img) =>
+          img.variant_id === variantId ? { ...img, variant_id: null } : img,
+        ),
+      );
+      fetchProducts(true);
     } else {
       setError(data.error);
     }
   }
 
   async function handleDelete(id: string) {
-    setDeleteError('');
+    setDeleteError("");
     const headers = await authHeaders();
-    const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE', headers });
+    const res = await fetch(`/api/admin/products/${id}`, {
+      method: "DELETE",
+      headers,
+    });
     const data = await res.json();
     if (!data.success) {
       setDeleteError(data.error);
@@ -331,13 +438,13 @@ export default function AdminProductsPage() {
     }
     setDeletingId(null);
     fetchProducts();
-    showSuccess('Product deleted');
+    showSuccess("Product deleted");
   }
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: 'details', label: 'Details' },
-    { id: 'images', label: 'Images' },
-    { id: 'variants', label: 'Variants' },
+    { id: "details", label: "Details" },
+    { id: "images", label: "Images" },
+    { id: "variants", label: "Variants" },
   ];
 
   return (
@@ -356,13 +463,18 @@ export default function AdminProductsPage() {
       </div>
 
       {successMsg && (
-        <div className="px-4 py-3 mb-4 bg-green-50 border border-green-200 text-sm text-green-700">{successMsg}</div>
+        <div className="px-4 py-3 mb-4 bg-green-50 border border-green-200 text-sm text-green-700">
+          {successMsg}
+        </div>
       )}
 
       <div className="border border-(--hairline) bg-ivory">
         <div className="grid grid-cols-[56px_1fr_1fr_100px_80px_140px] px-4 py-3 bg-black/2 border-b border-(--hairline) gap-3 items-center">
-          {['Image', 'Name', 'Category', 'Price', 'Status', 'Actions'].map(h => (
-            <p key={h} className="font-mono-label text-[0.65rem] uppercase tracking-wider text-umber">
+          {["Image", "Name", "Category", "Price", "Status", "Actions"].map((h) => (
+            <p
+              key={h}
+              className="font-mono-label text-[0.65rem] uppercase tracking-wider text-umber"
+            >
               {h}
             </p>
           ))}
@@ -384,26 +496,37 @@ export default function AdminProductsPage() {
           </div>
         ) : (
           products.map((p, i) => {
-            const primaryImage = p.images?.find(img => img.is_primary) ?? p.images?.[0];
+            const primaryImage =
+              p.images?.find((img) => img.is_primary) ?? p.images?.[0];
             return (
               <div
                 key={p.id}
                 className={`grid grid-cols-[56px_1fr_1fr_100px_80px_140px] px-4 py-3 gap-3 items-center ${
-                  i < products.length - 1 ? 'border-b border-(--hairline)' : ''
+                  i < products.length - 1 ? "border-b border-(--hairline)" : ""
                 }`}
               >
                 <div className="w-10 h-10 bg-black/3 border border-(--hairline) overflow-hidden flex items-center justify-center">
                   {primaryImage ? (
-                    <img src={primaryImage.image_url} alt={p.name} className="w-full h-full object-cover" />
+                    <img
+                      src={primaryImage.image_url}
+                      alt={p.name}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <span className="text-umber text-xs">—</span>
                   )}
                 </div>
                 <p className="text-sm text-espresso truncate">{p.name}</p>
-                <p className="text-sm text-umber truncate">{p.category?.name ?? '—'}</p>
-                <p className="text-xs text-umber font-mono-label truncate">{formatPrice(p.price)}</p>
-                <p className={`text-xs font-mono-label uppercase ${p.is_active ? 'text-green-700' : 'text-umber/50'}`}>
-                  {p.is_active ? 'Active' : 'Hidden'}
+                <p className="text-sm text-umber truncate">
+                  {p.category?.name ?? "—"}
+                </p>
+                <p className="text-xs text-umber font-mono-label truncate">
+                  {formatPrice(p.price)}
+                </p>
+                <p
+                  className={`text-xs font-mono-label uppercase ${p.is_active ? "text-green-700" : "text-umber/50"}`}
+                >
+                  {p.is_active ? "Active" : "Hidden"}
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -415,7 +538,7 @@ export default function AdminProductsPage() {
                   <button
                     onClick={() => {
                       setDeletingId(p.id);
-                      setDeleteError('');
+                      setDeleteError("");
                     }}
                     className="px-2 py-1 border border-(--hairline) text-xs text-umber hover:border-red-500 hover:text-red-600 transition-colors"
                   >
@@ -432,19 +555,24 @@ export default function AdminProductsPage() {
       {modalMode && (
         <div
           className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-          onClick={e => e.target === e.currentTarget && closeModal()}
+          onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
           <div className="bg-ivory w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-(--hairline) flex justify-between items-center">
-              <h3 className="font-display text-lg text-espresso">{editingProduct ? 'Edit Product' : 'Add Product'}</h3>
-              <button onClick={closeModal} className="text-umber hover:text-espresso">
+              <h3 className="font-display text-lg text-espresso">
+                {editingProduct ? "Edit Product" : "Add Product"}
+              </h3>
+              <button
+                onClick={closeModal}
+                className="text-umber hover:text-espresso"
+              >
                 ✕
               </button>
             </div>
 
             <div className="px-6 pt-4 flex gap-6 border-b border-(--hairline)">
-              {TABS.map(tab => {
-                const locked = tab.id !== 'details' && !editingProduct;
+              {TABS.map((tab) => {
+                const locked = tab.id !== "details" && !editingProduct;
                 return (
                   <button
                     key={tab.id}
@@ -452,23 +580,27 @@ export default function AdminProductsPage() {
                     onClick={() => !locked && setActiveTab(tab.id)}
                     className={`pb-3 font-mono-label text-xs uppercase tracking-widest border-b-2 transition-colors ${
                       activeTab === tab.id
-                        ? 'border-brass text-espresso'
+                        ? "border-brass text-espresso"
                         : locked
-                          ? 'border-transparent text-umber/30 cursor-not-allowed'
-                          : 'border-transparent text-umber hover:text-espresso'
+                          ? "border-transparent text-umber/30 cursor-not-allowed"
+                          : "border-transparent text-umber hover:text-espresso"
                     }`}
                   >
                     {tab.label}
-                    {locked && ' (save details first)'}
+                    {locked && " (save details first)"}
                   </button>
                 );
               })}
             </div>
 
             <div className="p-6">
-              {error && <div className="px-3 py-2 mb-4 bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>}
+              {error && (
+                <div className="px-3 py-2 mb-4 bg-red-50 border border-red-200 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
 
-              {activeTab === 'details' && (
+              {activeTab === "details" && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -478,7 +610,9 @@ export default function AdminProductsPage() {
                       <input
                         type="text"
                         value={details.name}
-                        onChange={e => setDetails(d => ({ ...d, name: e.target.value }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({ ...d, name: e.target.value }))
+                        }
                         placeholder="e.g. Moto Jacket"
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
@@ -489,11 +623,13 @@ export default function AdminProductsPage() {
                       </label>
                       <select
                         value={details.category_id}
-                        onChange={e => setDetails(d => ({ ...d, category_id: e.target.value }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({ ...d, category_id: e.target.value }))
+                        }
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
                       >
                         <option value="">Select a category</option>
-                        {categories.map(c => (
+                        {categories.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name}
                           </option>
@@ -511,7 +647,9 @@ export default function AdminProductsPage() {
                       step="0.01"
                       min="0"
                       value={details.price}
-                      onChange={e => setDetails(d => ({ ...d, price: e.target.value }))}
+                      onChange={(e) =>
+                        setDetails((d) => ({ ...d, price: e.target.value }))
+                      }
                       placeholder="e.g. 480"
                       className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
                     />
@@ -523,7 +661,9 @@ export default function AdminProductsPage() {
                     </label>
                     <textarea
                       value={details.description}
-                      onChange={e => setDetails(d => ({ ...d, description: e.target.value }))}
+                      onChange={(e) =>
+                        setDetails((d) => ({ ...d, description: e.target.value }))
+                      }
                       rows={3}
                       className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle resize-none"
                     />
@@ -534,24 +674,37 @@ export default function AdminProductsPage() {
                       <input
                         type="checkbox"
                         checked={details.is_featured}
-                        onChange={e => setDetails(d => ({ ...d, is_featured: e.target.checked }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({
+                            ...d,
+                            is_featured: e.target.checked,
+                          }))
+                        }
                         className="accent-saddle"
                       />
-                      <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Featured</span>
+                      <span className="font-mono-label text-xs uppercase tracking-wider text-umber">
+                        Featured
+                      </span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={details.is_active}
-                        onChange={e => setDetails(d => ({ ...d, is_active: e.target.checked }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({ ...d, is_active: e.target.checked }))
+                        }
                         className="accent-saddle"
                       />
-                      <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Active</span>
+                      <span className="font-mono-label text-xs uppercase tracking-wider text-umber">
+                        Active
+                      </span>
                     </label>
                   </div>
 
                   <hr className="border-(--hairline)" />
-                  <p className="font-mono-label text-[11px] uppercase text-brass">Listing Details</p>
+                  <p className="font-mono-label text-[11px] uppercase text-brass">
+                    Listing Details
+                  </p>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -561,7 +714,9 @@ export default function AdminProductsPage() {
                       <input
                         type="text"
                         value={details.brand_name}
-                        onChange={e => setDetails(d => ({ ...d, brand_name: e.target.value }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({ ...d, brand_name: e.target.value }))
+                        }
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
                     </div>
@@ -572,7 +727,9 @@ export default function AdminProductsPage() {
                       <input
                         type="text"
                         value={details.materials}
-                        onChange={e => setDetails(d => ({ ...d, materials: e.target.value }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({ ...d, materials: e.target.value }))
+                        }
                         placeholder="e.g. Full-grain leather"
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
@@ -585,9 +742,13 @@ export default function AdminProductsPage() {
                     </label>
                     <textarea
                       value={details.features}
-                      onChange={e => setDetails(d => ({ ...d, features: e.target.value }))}
+                      onChange={(e) =>
+                        setDetails((d) => ({ ...d, features: e.target.value }))
+                      }
                       rows={4}
-                      placeholder={'Hand-stitched seams\nBrass hardware\nYKK zippers'}
+                      placeholder={
+                        "Hand-stitched seams\nBrass hardware\nYKK zippers"
+                      }
                       className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle resize-none"
                     />
                   </div>
@@ -601,7 +762,12 @@ export default function AdminProductsPage() {
                         type="number"
                         min="0"
                         value={details.processing_days_min}
-                        onChange={e => setDetails(d => ({ ...d, processing_days_min: e.target.value }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({
+                            ...d,
+                            processing_days_min: e.target.value,
+                          }))
+                        }
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
                     </div>
@@ -613,7 +779,12 @@ export default function AdminProductsPage() {
                         type="number"
                         min="0"
                         value={details.processing_days_max}
-                        onChange={e => setDetails(d => ({ ...d, processing_days_max: e.target.value }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({
+                            ...d,
+                            processing_days_max: e.target.value,
+                          }))
+                        }
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
                     </div>
@@ -625,7 +796,9 @@ export default function AdminProductsPage() {
                     </label>
                     <textarea
                       value={details.return_policy}
-                      onChange={e => setDetails(d => ({ ...d, return_policy: e.target.value }))}
+                      onChange={(e) =>
+                        setDetails((d) => ({ ...d, return_policy: e.target.value }))
+                      }
                       rows={2}
                       className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle resize-none"
                     />
@@ -639,7 +812,12 @@ export default function AdminProductsPage() {
                       <input
                         type="text"
                         value={details.shipping_from}
-                        onChange={e => setDetails(d => ({ ...d, shipping_from: e.target.value }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({
+                            ...d,
+                            shipping_from: e.target.value,
+                          }))
+                        }
                         placeholder="e.g. Karachi, Pakistan"
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
@@ -648,45 +826,94 @@ export default function AdminProductsPage() {
                       <input
                         type="checkbox"
                         checked={details.free_delivery}
-                        onChange={e => setDetails(d => ({ ...d, free_delivery: e.target.checked }))}
+                        onChange={(e) =>
+                          setDetails((d) => ({
+                            ...d,
+                            free_delivery: e.target.checked,
+                          }))
+                        }
                         className="accent-saddle"
                       />
-                      <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Free Delivery</span>
+                      <span className="font-mono-label text-xs uppercase tracking-wider text-umber">
+                        Free Delivery
+                      </span>
                     </label>
                   </div>
                 </div>
               )}
 
-              {activeTab === 'images' && editingProduct && (
+              {activeTab === "images" && editingProduct && (
                 <div>
+                  <div className="mb-4">
+                    <label className="font-mono-label block text-[11px] uppercase tracking-wider text-umber mb-1.5">
+                      New uploads belong to
+                    </label>
+                    <select
+                      value={uploadColorId}
+                      onChange={(e) => setUploadColorId(e.target.value)}
+                      className="border border-(--hairline) bg-ivory px-3 py-2 text-sm text-espresso"
+                    >
+                      <option value="">Shared (all colors)</option>
+                      {colorVariants.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.attribute_value}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="grid grid-cols-4 gap-3 mb-4">
-                    {images.map(img => (
-                      <div key={img.id} className="relative aspect-square border border-(--hairline) overflow-hidden group">
-                        <img src={img.image_url} alt="" className="w-full h-full object-cover" />
-                        {img.is_primary && (
-                          <span className="absolute top-1 left-1 bg-espresso text-ivory text-[10px] font-mono-label uppercase px-1.5 py-0.5">
-                            Primary
-                          </span>
-                        )}
-                        <div className="absolute inset-0 bg-black/50 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                          {!img.is_primary && (
-                            <button onClick={() => handleSetPrimary(img.id)} className="hover:underline">
-                              Set as Primary
-                            </button>
+                    {images.map((img) => (
+                      <div key={img.id}>
+                        <div className="relative aspect-square border border-(--hairline) overflow-hidden group">
+                          <img
+                            src={img.image_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                          {img.is_primary && (
+                            <span className="absolute top-1 left-1 bg-espresso text-ivory text-[10px] font-mono-label uppercase px-1.5 py-0.5">
+                              Primary
+                            </span>
                           )}
-                          <button onClick={() => handleDeleteImage(img.id)} className="hover:underline">
-                            Delete
-                          </button>
+                          <div className="absolute inset-0 bg-black/50 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                            {!img.is_primary && (
+                              <button
+                                onClick={() => handleSetPrimary(img.id)}
+                                className="hover:underline"
+                              >
+                                Set as Primary
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteImage(img.id)}
+                              className="hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
+                        <select
+                          value={img.variant_id ?? ""}
+                          onChange={(e) => handleImageColor(img.id, e.target.value)}
+                          className="mt-1 w-full border border-(--hairline) bg-ivory px-1 py-1 text-xs text-espresso"
+                        >
+                          <option value="">Shared</option>
+                          {colorVariants.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.attribute_value}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     ))}
                     <label
                       className={`aspect-square border border-dashed border-(--hairline) flex items-center justify-center cursor-pointer hover:border-saddle transition-colors ${
-                        uploadingImage ? 'opacity-50 pointer-events-none' : ''
+                        uploadingImage ? "opacity-50 pointer-events-none" : ""
                       }`}
                     >
                       <span className="text-xs text-umber text-center px-2">
-                        {uploadingImage ? 'Uploading…' : '+ Add Image'}
+                        {uploadingImage ? "Uploading…" : "+ Add Image"}
                       </span>
                       <input
                         type="file"
@@ -698,46 +925,65 @@ export default function AdminProductsPage() {
                     </label>
                   </div>
                   <p className="text-xs text-umber/70">
-                    The first image uploaded is set as primary. Hover an image to set it as primary or delete it.
+                    The first image uploaded is set as primary. Hover an image to set
+                    it as primary or delete it. Use the dropdown under each image to
+                    choose its color.
                   </p>
                 </div>
               )}
 
-              {activeTab === 'variants' && editingProduct && (
+              {activeTab === "variants" && editingProduct && (
                 <div>
                   <div className="border border-(--hairline) mb-5">
-                    <div className="grid grid-cols-[1fr_1fr_80px_60px] px-3 py-2 bg-black/2 border-b border-(--hairline) gap-3">
-                      {['Attribute', 'Value', 'Stock', ''].map(h => (
-                        <p key={h} className="font-mono-label text-[0.65rem] uppercase tracking-wider text-umber">
+                    <div className="grid grid-cols-[1fr_1fr_80px_110px] px-3 py-2 bg-black/2 border-b border-(--hairline) gap-3">
+                      {["Attribute", "Value", "Stock", ""].map((h) => (
+                        <p
+                          key={h}
+                          className="font-mono-label text-[0.65rem] uppercase tracking-wider text-umber"
+                        >
                           {h}
                         </p>
                       ))}
                     </div>
                     {variants.length === 0 ? (
-                      <p className="text-sm text-umber p-4 text-center">No variants yet</p>
+                      <p className="text-sm text-umber p-4 text-center">
+                        No variants yet
+                      </p>
                     ) : (
                       variants.map((v, i) => (
                         <div
                           key={v.id}
-                          className={`grid grid-cols-[1fr_1fr_80px_60px] px-3 py-2 gap-3 items-center ${
-                            i < variants.length - 1 ? 'border-b border-(--hairline)' : ''
+                          className={`grid grid-cols-[1fr_1fr_80px_110px] px-3 py-2 gap-3 items-center ${
+                            i < variants.length - 1
+                              ? "border-b border-(--hairline)"
+                              : ""
                           }`}
                         >
                           <p className="text-sm text-espresso">{v.attribute_name}</p>
                           <p className="text-sm text-umber">{v.attribute_value}</p>
                           <p className="text-sm text-umber">{v.stock_quantity}</p>
-                          <button
-                            onClick={() => handleDeleteVariant(v.id)}
-                            className="text-xs text-umber hover:text-red-600 text-left"
-                          >
-                            Remove
-                          </button>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => startEditVariant(v)}
+                              className="text-xs text-umber hover:text-saddle"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteVariant(v.id)}
+                              className="text-xs text-umber hover:text-red-600"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}
                   </div>
 
-                  <p className="font-mono-label text-[11px] uppercase text-brass mb-3">Add Variant</p>
+                  <p className="font-mono-label text-[11px] uppercase text-brass mb-3">
+                    {editingVariantId ? "Edit Variant" : "Add Variant"}
+                  </p>
                   <div className="grid grid-cols-[1fr_1fr_100px] gap-3 items-end">
                     <div>
                       <label className="font-mono-label block text-[11px] uppercase tracking-wider text-umber mb-1.5">
@@ -746,7 +992,12 @@ export default function AdminProductsPage() {
                       <input
                         type="text"
                         value={variantForm.attribute_name}
-                        onChange={e => setVariantForm(f => ({ ...f, attribute_name: e.target.value }))}
+                        onChange={(e) =>
+                          setVariantForm((f) => ({
+                            ...f,
+                            attribute_name: e.target.value,
+                          }))
+                        }
                         placeholder="e.g. Size"
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
@@ -758,7 +1009,12 @@ export default function AdminProductsPage() {
                       <input
                         type="text"
                         value={variantForm.attribute_value}
-                        onChange={e => setVariantForm(f => ({ ...f, attribute_value: e.target.value }))}
+                        onChange={(e) =>
+                          setVariantForm((f) => ({
+                            ...f,
+                            attribute_value: e.target.value,
+                          }))
+                        }
                         placeholder="e.g. M"
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
@@ -771,18 +1027,37 @@ export default function AdminProductsPage() {
                         type="number"
                         min="0"
                         value={variantForm.stock_quantity}
-                        onChange={e => setVariantForm(f => ({ ...f, stock_quantity: e.target.value }))}
+                        onChange={(e) =>
+                          setVariantForm((f) => ({
+                            ...f,
+                            stock_quantity: e.target.value,
+                          }))
+                        }
                         className="w-full border border-(--hairline) bg-ivory px-3 py-2 text-sm text-espresso focus:outline-none focus:border-saddle"
                       />
                     </div>
                   </div>
-                  <button
-                    onClick={handleAddVariant}
-                    disabled={savingVariant}
-                    className="mt-3 bg-espresso text-ivory px-4 py-2 font-mono-label text-xs uppercase tracking-widest hover:bg-saddle transition-colors disabled:opacity-50"
-                  >
-                    {savingVariant ? 'Adding…' : '+ Add Variant'}
-                  </button>
+                  <div className="mt-3 flex gap-3">
+                    <button
+                      onClick={handleSaveVariant}
+                      disabled={savingVariant}
+                      className="bg-espresso text-ivory px-4 py-2 font-mono-label text-xs uppercase tracking-widest hover:bg-saddle transition-colors disabled:opacity-50"
+                    >
+                      {savingVariant
+                        ? "Saving…"
+                        : editingVariantId
+                          ? "Save Changes"
+                          : "+ Add Variant"}
+                    </button>
+                    {editingVariantId && (
+                      <button
+                        onClick={cancelEditVariant}
+                        className="px-4 py-2 border border-(--hairline) text-xs font-mono-label uppercase tracking-widest text-umber hover:border-espresso"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -792,15 +1067,19 @@ export default function AdminProductsPage() {
                 onClick={closeModal}
                 className="px-5 py-2.5 border border-(--hairline) text-xs font-mono-label uppercase tracking-widest text-umber hover:border-espresso hover:text-espresso transition-colors"
               >
-                {activeTab === 'details' ? 'Cancel' : 'Done'}
+                {activeTab === "details" ? "Cancel" : "Done"}
               </button>
-              {activeTab === 'details' && (
+              {activeTab === "details" && (
                 <button
                   onClick={handleSaveDetails}
                   disabled={saving}
                   className="px-5 py-2.5 bg-espresso text-ivory text-xs font-mono-label uppercase tracking-widest hover:bg-saddle transition-colors disabled:opacity-50"
                 >
-                  {saving ? 'Saving…' : editingProduct ? 'Save Changes' : 'Save & Continue'}
+                  {saving
+                    ? "Saving…"
+                    : editingProduct
+                      ? "Save Changes"
+                      : "Save & Continue"}
                 </button>
               )}
             </div>
@@ -812,16 +1091,22 @@ export default function AdminProductsPage() {
       {deletingId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-ivory p-6 max-w-sm w-full text-center">
-            <h3 className="font-display text-lg text-espresso mb-2">Delete product?</h3>
-            <p className="text-sm text-umber mb-4">This will also remove its images and variants. This cannot be undone.</p>
+            <h3 className="font-display text-lg text-espresso mb-2">
+              Delete product?
+            </h3>
+            <p className="text-sm text-umber mb-4">
+              This will also remove its images and variants. This cannot be undone.
+            </p>
             {deleteError && (
-              <div className="px-3 py-2 mb-4 bg-red-50 border border-red-200 text-sm text-red-700">{deleteError}</div>
+              <div className="px-3 py-2 mb-4 bg-red-50 border border-red-200 text-sm text-red-700">
+                {deleteError}
+              </div>
             )}
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => {
                   setDeletingId(null);
-                  setDeleteError('');
+                  setDeleteError("");
                 }}
                 className="px-5 py-2.5 border border-(--hairline) text-xs font-mono-label uppercase tracking-widest text-umber hover:border-espresso hover:text-espresso transition-colors"
               >

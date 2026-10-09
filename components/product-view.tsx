@@ -36,7 +36,7 @@ export default function ProductView({
     if (!colorKey) return [];
     return grouped[colorKey].map((v) => {
       const first = images.find((i) => i.variantId === v.id);
-      const swatch = images.find((i) => i.id === v.image_id) ?? first ?? images[0];
+      const swatch = first ?? images[0];
       return {
         id: v.id,
         name: v.attribute_value,

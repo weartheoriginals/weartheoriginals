@@ -50,12 +50,7 @@ export interface ProductVariant {
   attribute_name: string;
   attribute_value: string;
   stock_quantity: number;
-  image_id: string | null;
   display_order: number;
-}
-
-export interface ProductVariantWithImage extends ProductVariant {
-  image: ProductImage | null;
 }
 
 export interface ProductWithImages extends Product {
