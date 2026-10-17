@@ -45,6 +45,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.return_policy !== undefined) updates.return_policy = body.return_policy?.trim() || null;
   if (body.shipping_from !== undefined) updates.shipping_from = body.shipping_from?.trim() || null;
   if (body.free_delivery !== undefined) updates.free_delivery = body.free_delivery;
+  if (body.details !== undefined) updates.details = body.details?.trim() || null;
 
   const { data, error } = await supabaseAdmin.from('products').update(updates).eq('id', id).select().single();
 

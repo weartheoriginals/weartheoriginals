@@ -11,7 +11,7 @@ export interface Category {
 }
 
 export interface CategoryWithParent extends Category {
-  parent: Pick<Category, "id" | "name" | "slug"> | null;
+  parent: Pick<Category, 'id' | 'name' | 'slug'> | null;
 }
 
 export interface Product {
@@ -33,6 +33,7 @@ export interface Product {
   return_policy: string | null;
   shipping_from: string | null;
   free_delivery: boolean;
+  details: string | null;
 }
 
 export interface ProductImage {
@@ -112,13 +113,7 @@ export interface TrackOrderInput {
   email: string;
 }
 
-export type OrderStatus =
-  | "confirmed"
-  | "processing"
-  | "dispatched"
-  | "in_transit"
-  | "delivered"
-  | "cancelled";
+export type OrderStatus = 'confirmed' | 'processing' | 'dispatched' | 'in_transit' | 'delivered' | 'cancelled';
 
 export interface ShippingAddress {
   line1: string;
@@ -160,6 +155,4 @@ export interface CreateOrderItemInput {
   variant_ids: string[];
 }
 
-export type ApiResponse<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type ApiResponse<T> = { success: true; data: T } | { success: false; error: string };

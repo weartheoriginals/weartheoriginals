@@ -1,24 +1,19 @@
-import ProductFeatureBanner from "@/components/product-feature-banner";
-import ProductTabs from "@/components/product-tabs";
-import ProductView from "@/components/product-view";
-import RelatedShelf from "@/components/related-shelf";
-import {
-  colorToCss,
-  getFakeRating,
-  isColorAttribute,
-  type RelatedCard,
-} from "@/lib/product-ui";
-import { getProductBySlug, getRelatedProducts } from "@/lib/queries/products";
-import type { ProductWithDetails } from "@/lib/types";
-import { getProductImageUrl, PLACEHOLDER_IMAGE } from "@/lib/utils";
-import { notFound } from "next/navigation";
+import ProductFeatureBanner from '@/components/product-feature-banner';
+import ProductTabs from '@/components/product-tabs';
+import ProductView from '@/components/product-view';
+import RelatedShelf from '@/components/related-shelf';
+import { colorToCss, getFakeRating, isColorAttribute, type RelatedCard } from '@/lib/product-ui';
+import { getProductBySlug, getRelatedProducts } from '@/lib/queries/products';
+import type { ProductWithDetails } from '@/lib/types';
+import { getProductImageUrl, PLACEHOLDER_IMAGE } from '@/lib/utils';
+import { notFound } from 'next/navigation';
 
 function toRelatedCard(product: ProductWithDetails): RelatedCard {
-  const primary = product.images.find((img) => img.is_primary) ?? product.images[0];
+  const primary = product.images.find(img => img.is_primary) ?? product.images[0];
   const colors = product.variants
-    .filter((v) => isColorAttribute(v.attribute_name))
+    .filter(v => isColorAttribute(v.attribute_name))
     .sort((a, b) => a.display_order - b.display_order)
-    .map((v) => colorToCss(v.attribute_value));
+    .map(v => colorToCss(v.attribute_value));
 
   return {
     slug: product.slug,
@@ -30,11 +25,7 @@ function toRelatedCard(product: ProductWithDetails): RelatedCard {
   };
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
 
@@ -47,30 +38,28 @@ export default async function ProductPage({
     return a.display_order - b.display_order;
   });
   const images = sortedImages.length
-    ? sortedImages.map((img) => ({
+    ? sortedImages.map(img => ({
         id: img.id,
         url: getProductImageUrl(img.image_url),
         variantId: img.variant_id ?? null,
       }))
-    : [{ id: "placeholder", url: PLACEHOLDER_IMAGE, variantId: null }];
+    : [{ id: 'placeholder', url: PLACEHOLDER_IMAGE, variantId: null }];
 
   // Shared images (no color) become the detail shots in the banner,
   // but only when the product has colors. Otherwise they are the gallery.
-  const hasColors = product.variants.some((v) => isColorAttribute(v.attribute_name));
+  const hasColors = product.variants.some(v => isColorAttribute(v.attribute_name));
   const detailImages = hasColors
     ? images
-        .filter((i) => !i.variantId)
+        .filter(i => !i.variantId)
         .slice(0, 4)
-        .map((i) => i.url)
+        .map(i => i.url)
     : [];
 
   const relatedProducts = product.category_id
-    ? (await getRelatedProducts(product.category_id, product.id, 8)).map(
-        toRelatedCard,
-      )
+    ? (await getRelatedProducts(product.category_id, product.id, 8)).map(toRelatedCard)
     : [];
 
-  const brand = product.brand_name ?? "OGNLS";
+  const brand = product.brand_name ?? 'OGNLS';
 
   return (
     <main>
@@ -82,7 +71,7 @@ export default async function ProductPage({
             name: product.name,
             brand,
             price: product.price,
-            description: product.description ?? "",
+            description: product.description ?? '',
             freeDelivery: product.free_delivery,
             processingMin: product.processing_days_min,
             processingMax: product.processing_days_max,
@@ -94,7 +83,8 @@ export default async function ProductPage({
 
       <section className="mx-auto max-w-350 px-6 md:px-10 pb-14 md:pb-20">
         <ProductTabs
-          description={product.description ?? ""}
+          description={product.description ?? ''}
+          details={product.details ?? ''}
           features={product.features}
           materials={product.materials}
           brand={brand}

@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       return_policy: body.return_policy?.trim() || null,
       shipping_from: body.shipping_from?.trim() || null,
       free_delivery: body.free_delivery ?? true,
+      details: body.details?.trim() || null,
     })
     .select()
     .single();
