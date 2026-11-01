@@ -92,11 +92,38 @@ export default function ProductInfo({
             <div key={attr}>
               <p className="text-sm text-espresso">
                 {attr}
-                <span className="ml-2 text-umber">{selections[attr]}</span>
+                <span className="ml-2 hidden text-umber md:inline">{selections[attr]}</span>
               </p>
 
+              <div className="relative mt-3 md:hidden">
+                <select
+                  value={selections[attr]}
+                  onChange={e => pick(attr, e.target.value)}
+                  aria-label={attr}
+                  className="w-full appearance-none border border-espresso/20 bg-ivory px-4 py-3.5 pr-11 text-base text-espresso transition-colors focus:border-brass focus:outline-none"
+                >
+                  {grouped[attr].map(v => (
+                    <option key={v.id} value={v.attribute_value} disabled={!isColorAttribute(attr) && v.stock_quantity <= 0}>
+                      {v.attribute_value}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-espresso"
+                  width="12"
+                  height="8"
+                  viewBox="0 0 12 8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                >
+                  <path d="M1 1.5l5 5 5-5" />
+                </svg>
+              </div>
+
               {isColorAttribute(attr) ? (
-                <div className="mt-3 flex flex-wrap gap-3">
+                <div className="mt-3 hidden flex-wrap gap-3 md:flex">
                   {colors.map(c => {
                     const sel = c.name === selections[attr];
                     return (
