@@ -42,14 +42,13 @@ export type RelatedCard = {
 };
 
 const COLOR_OVERRIDES: Record<string, string> = {
-  camel: "#c19a6b",
-  burgundy: "#800020",
-  cognac: "#9a463d",
-  olive: "#6b6b3a",
-  cream: "#f3ead8",
-  tan: "#c8a27a",
+  camel: '#c19a6b',
+  burgundy: '#800020',
+  cognac: '#9a463d',
+  olive: '#6b6b3a',
+  cream: '#f3ead8',
+  tan: '#c8a27a',
 };
 
 // "Red" -> "red", which CSS understands. Names CSS doesn't know go in the map above.
-export const colorToCss = (name: string) =>
-  COLOR_OVERRIDES[name.trim().toLowerCase()] ?? name.trim().toLowerCase();
+export const colorToCss = (name: string) => COLOR_OVERRIDES[name.trim().toLowerCase()] ?? name.trim().toLowerCase();
