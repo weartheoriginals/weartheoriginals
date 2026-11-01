@@ -1,4 +1,5 @@
-import Link from "next/link";
+import Link from 'next/link';
+import BestSellerBadge from './best-seller-badge';
 
 export type ProductCardData = {
   slug: string;
@@ -6,58 +7,52 @@ export type ProductCardData = {
   price: number;
   imageUrl: string;
   tag?: string; // e.g. "Limited Stock", "New"
+  isBestSeller?: boolean;
 };
 
 function formatPrice(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
     minimumFractionDigits: 0,
   }).format(amount);
 }
 
 export default function ProductCard({
   product,
-  variant = "shelf",
-  size = "default",
+  variant = 'shelf',
+  size = 'default',
 }: {
   product: ProductCardData;
   /** 'shelf' = fixed width for horizontal-scroll rows. 'grid' = fluid width for CSS grid layouts. */
-  variant?: "shelf" | "grid";
+  variant?: 'shelf' | 'grid';
   /** 'compact' = smaller type/spacing for dense grids (5+ across). */
-  size?: "default" | "compact";
+  size?: 'default' | 'compact';
 }) {
-  const isCompact = size === "compact";
+  const isCompact = size === 'compact';
   const widthClasses =
-    variant === "shelf"
-      ? `shelf-item shrink-0 ${isCompact ? "w-40 md:w-[220px]" : "w-44 md:w-[320px]"}`
-      : "w-full";
+    variant === 'shelf' ? `shelf-item shrink-0 ${isCompact ? 'w-40 md:w-[220px]' : 'w-44 md:w-[320px]'}` : 'w-full';
 
   return (
     <Link href={`/p/${product.slug}`} className={`group ${widthClasses}`}>
-      <div className="aspect-3/4 w-full overflow-hidden bg-umber/5">
-        <img
-          src={product.imageUrl}
-          alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-        />
+      <div className="relative">
+        <div className="aspect-3/4 w-full overflow-hidden bg-umber/5">
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          />
+        </div>
+        {product.isBestSeller && <BestSellerBadge className="absolute left-2 top-3 z-10 md:left-3 md:top-4" />}
       </div>
-      <div className={isCompact ? "mt-2.5" : "mt-4"}>
-        <h3
-          className={`font-display text-espresso stitch-underline inline-block ${isCompact ? "text-sm" : "text-lg"}`}
-        >
+      <div className={isCompact ? 'mt-2.5' : 'mt-4'}>
+        <h3 className={`font-display text-espresso stitch-underline inline-block ${isCompact ? 'text-sm' : 'text-lg'}`}>
           {product.name}
         </h3>
-        <p
-          className={`mt-1 font-mono-label text-umber ${isCompact ? "text-[11px]" : "text-[13px]"}`}
-        >
+        <p className={`mt-1 font-mono-label text-umber ${isCompact ? 'text-[11px]' : 'text-[13px]'}`}>
           {formatPrice(product.price)}
         </p>
-        {product.tag && (
-          <p className="mt-1 font-mono-label text-[10px] uppercase text-brass">
-            {product.tag}
-          </p>
-        )}
+        {product.tag && <p className="mt-1 font-mono-label text-[10px] uppercase text-brass">{product.tag}</p>}
       </div>
     </Link>
   );

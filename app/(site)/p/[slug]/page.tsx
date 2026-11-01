@@ -21,6 +21,7 @@ function toRelatedCard(product: ProductWithDetails): RelatedCard {
     price: product.price,
     imageUrl: primary ? getProductImageUrl(primary.image_url) : PLACEHOLDER_IMAGE,
     colors,
+    isBestSeller: product.is_best_seller,
     ...getFakeRating(product.slug),
   };
 }
@@ -73,6 +74,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             price: product.price,
             description: product.description ?? '',
             freeDelivery: product.free_delivery,
+            isBestSeller: product.is_best_seller,
             processingMin: product.processing_days_min,
             processingMax: product.processing_days_max,
           }}

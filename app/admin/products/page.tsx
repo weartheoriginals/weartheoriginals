@@ -14,6 +14,7 @@ const emptyDetails = {
   price: '',
   description: '',
   is_featured: false,
+  is_best_seller: false,
   is_active: true,
   brand_name: '',
   materials: '',
@@ -107,6 +108,7 @@ export default function AdminProductsPage() {
       price: String(p.price),
       description: p.description ?? '',
       is_featured: p.is_featured,
+      is_best_seller: p.is_best_seller,
       is_active: p.is_active,
       brand_name: p.brand_name ?? '',
       materials: p.materials ?? '',
@@ -156,6 +158,7 @@ export default function AdminProductsPage() {
       price: details.price,
       description: details.description.trim() || null,
       is_featured: details.is_featured,
+      is_best_seller: details.is_best_seller,
       is_active: details.is_active,
       brand_name: details.brand_name.trim() || null,
       materials: details.materials.trim() || null,
@@ -617,6 +620,15 @@ export default function AdminProductsPage() {
                         className="accent-saddle"
                       />
                       <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Featured</span>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={details.is_best_seller}
+                          onChange={e => setDetails(d => ({ ...d, is_best_seller: e.target.checked }))}
+                          className="accent-saddle"
+                        />
+                        <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Best Seller</span>
+                      </label>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input

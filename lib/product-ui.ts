@@ -15,6 +15,7 @@ export type ProductSummary = {
   price: number;
   description: string;
   freeDelivery: boolean;
+  isBestSeller: boolean;
   processingMin: number | null;
   processingMax: number | null;
 };
@@ -37,6 +38,7 @@ export type RelatedCard = {
   price: number;
   imageUrl: string;
   colors: string[]; // CSS colors for the dots
+  isBestSeller: boolean;
   rating: number;
   count: number;
 };

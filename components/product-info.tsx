@@ -6,6 +6,7 @@ import type { GroupedVariants, ProductVariant } from '@/lib/types';
 import { getSelectionStock, isSelectionComplete, resolveVariantIds } from '@/lib/variant-helpers';
 import Link from 'next/link';
 import { useState } from 'react';
+import BestSellerBadge from './best-seller-badge';
 import StarRating from './star-rating';
 
 function formatPrice(amount: number) {
@@ -78,6 +79,7 @@ export default function ProductInfo({
 
   return (
     <div className="md:sticky md:top-28 self-start">
+      {product.isBestSeller && <BestSellerBadge className="mb-4" />}
       <p className="font-mono-label text-xs uppercase tracking-widest text-umber">{product.brand}</p>
       <h1 className="mt-2 font-display font-light text-3xl md:text-4xl text-espresso">{product.name}</h1>
 

@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       category_id: body.category_id,
       price: parseFloat(body.price),
       is_featured: body.is_featured ?? false,
+      is_best_seller: body.is_best_seller ?? false,
       is_active: body.is_active ?? true,
       brand_name: body.brand_name?.trim() || null,
       materials: body.materials?.trim() || null,
