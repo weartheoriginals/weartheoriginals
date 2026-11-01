@@ -43,7 +43,7 @@ export default function ProductCard({
             className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           />
         </div>
-        {product.isBestSeller && <BestSellerBadge className="absolute left-2 top-3 z-10 md:left-3 md:top-4" />}
+        <BestSellerBadge corner />
       </div>
       <div className={isCompact ? 'mt-2.5' : 'mt-4'}>
         <h3 className={`font-display text-espresso stitch-underline inline-block ${isCompact ? 'text-sm' : 'text-lg'}`}>

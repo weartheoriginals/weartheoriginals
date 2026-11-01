@@ -62,7 +62,7 @@ export default function RelatedShelf({ products }: { products: RelatedCard[] }) 
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 </div>
-                {p.isBestSeller && <BestSellerBadge className="absolute left-2 top-3 z-10" />}
+                {p.isBestSeller && <BestSellerBadge corner />}
               </div>
               <p className="mt-3 text-sm text-espresso">{p.name}</p>
               <p className="mt-1 font-mono-label text-sm text-umber">{formatPrice(p.price)}</p>
