@@ -16,6 +16,9 @@ export type ProductSummary = {
   description: string;
   freeDelivery: boolean;
   isBestSeller: boolean;
+  isInStock: boolean;
+  fomoQuantity: number | null;
+  discountPercent: number;
   processingMin: number | null;
   processingMax: number | null;
 };
@@ -39,6 +42,7 @@ export type RelatedCard = {
   imageUrl: string;
   colors: string[]; // CSS colors for the dots
   isBestSeller: boolean;
+  discountPercent: number;
   rating: number;
   count: number;
 };
@@ -54,3 +58,9 @@ const COLOR_OVERRIDES: Record<string, string> = {
 
 // "Red" -> "red", which CSS understands. Names CSS doesn't know go in the map above.
 export const colorToCss = (name: string) => COLOR_OVERRIDES[name.trim().toLowerCase()] ?? name.trim().toLowerCase();
+
+// Price after discount, rounded to 2 decimals. discountPercent 0 returns the same price.
+export function getFinalPrice(price: number, discountPercent: number) {
+  if (!discountPercent || discountPercent <= 0) return price;
+  return Math.round(price * (1 - discountPercent / 100) * 100) / 100;
+}

@@ -17,6 +17,7 @@ function toProductCardData(product: ProductWithImages): ProductCardData {
     name: product.name,
     price: product.price,
     isBestSeller: product.is_best_seller,
+    discountPercent: Number(product.discount_percent) || 0,
     imageUrl: primaryImage ? getProductImageUrl(primaryImage.image_url) : PLACEHOLDER_IMAGE,
   };
 }

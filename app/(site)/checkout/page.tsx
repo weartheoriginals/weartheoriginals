@@ -331,6 +331,9 @@ export default function CheckoutPage() {
                   </div>
                   <p className="font-mono-label text-[13px] text-umber whitespace-nowrap">
                     {formatPrice(item.price * item.quantity)}
+                    {item.originalPrice && item.originalPrice > item.price && (
+                      <span className="ml-2 line-through opacity-60">{formatPrice(item.originalPrice * item.quantity)}</span>
+                    )}
                   </p>
                 </div>
               ))}

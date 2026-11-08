@@ -1,3 +1,4 @@
+import { getFinalPrice } from '@/lib/product-ui';
 import Link from 'next/link';
 import BestSellerBadge from './best-seller-badge';
 
@@ -8,6 +9,7 @@ export type ProductCardData = {
   imageUrl: string;
   tag?: string; // e.g. "Limited Stock", "New"
   isBestSeller?: boolean;
+  discountPercent?: number;
 };
 
 function formatPrice(amount: number) {
@@ -30,6 +32,8 @@ export default function ProductCard({
   size?: 'default' | 'compact';
 }) {
   const isCompact = size === 'compact';
+  const finalPrice = getFinalPrice(product.price, product.discountPercent ?? 0);
+  const hasDiscount = finalPrice < product.price;
   const widthClasses =
     variant === 'shelf' ? `shelf-item shrink-0 ${isCompact ? 'w-40 md:w-[220px]' : 'w-44 md:w-[320px]'}` : 'w-full';
 

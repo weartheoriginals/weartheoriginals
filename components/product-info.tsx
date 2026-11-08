@@ -1,9 +1,9 @@
 'use client';
 
 import { useCart } from '@/lib/cart-context';
-import { isColorAttribute, type ColorOption, type ProductSummary } from '@/lib/product-ui';
+import { getFinalPrice, isColorAttribute, type ColorOption, type ProductSummary } from '@/lib/product-ui';
 import type { GroupedVariants, ProductVariant } from '@/lib/types';
-import { getSelectionStock, isSelectionComplete, resolveVariantIds } from '@/lib/variant-helpers';
+import { isSelectionComplete, resolveVariantIds } from '@/lib/variant-helpers';
 import Link from 'next/link';
 import { useState } from 'react';
 import BestSellerBadge from './best-seller-badge';
@@ -41,8 +41,9 @@ export default function ProductInfo({
   const [error, setError] = useState('');
 
   const attrs = Object.keys(grouped);
-  const stock = attrs.length > 0 ? getSelectionStock(variants, selections) : null;
-  const outOfStock = stock !== null && stock <= 0;
+  const outOfStock = !product.isInStock;
+  const finalPrice = getFinalPrice(product.price, product.discountPercent);
+  const hasDiscount = finalPrice < product.price;
 
   function pick(attr: string, value: string) {
     onSelect(attr, value);
@@ -54,7 +55,8 @@ export default function ProductInfo({
       product_id: product.id,
       slug: product.slug,
       name: product.name,
-      price: product.price,
+      price: finalPrice,
+      originalPrice: product.price,
       imageUrl,
     };
 
@@ -62,7 +64,7 @@ export default function ProductInfo({
       if (!isSelectionComplete(grouped, selections)) return setError('Please select an option for every attribute.');
       const variantIds = resolveVariantIds(variants, selections);
       if (!variantIds) return setError('That combination is not available.');
-      if (outOfStock) return setError('That combination is out of stock.');
+      if (outOfStock) return setError('This product is out of stock.');
       addItem({ ...base, customizations: selections, variantIds });
     } else {
       addItem({ ...base, customizations: {}, variantIds: [] });
@@ -74,7 +76,7 @@ export default function ProductInfo({
 
   const shipsText =
     product.processingMin && product.processingMax
-      ? `Ships within ${product.processingMin}–${product.processingMax} business days`
+      ? `Ships within ${product.processingMin}-${product.processingMax} business days`
       : null;
 
   return (
@@ -83,7 +85,18 @@ export default function ProductInfo({
       <p className="font-mono-label text-xs uppercase tracking-widest text-umber">{product.brand}</p>
       <h1 className="mt-2 font-display font-light text-3xl md:text-4xl text-espresso">{product.name}</h1>
 
-      <p className="mt-6 font-display text-2xl text-espresso">{formatPrice(product.price)}</p>
+      <div className="mt-6 flex items-baseline gap-3">
+        <p className="font-display text-2xl text-espresso">{formatPrice(finalPrice)}</p>
+        {hasDiscount && (
+          <>
+            <p className="text-base text-umber line-through">{formatPrice(product.price)}</p>
+            <p className="font-mono-label text-xs uppercase tracking-wider text-brass">
+              {Math.round(product.discountPercent)}% off
+            </p>
+          </>
+        )}
+      </div>
+
       <div className="mt-2">
         <StarRating rating={rating.rating} count={rating.count} />
       </div>
@@ -105,7 +118,7 @@ export default function ProductInfo({
                   className="w-full appearance-none border border-espresso/20 bg-ivory px-4 py-3.5 pr-11 text-base text-espresso transition-colors focus:border-brass focus:outline-none"
                 >
                   {grouped[attr].map(v => (
-                    <option key={v.id} value={v.attribute_value} disabled={!isColorAttribute(attr) && v.stock_quantity <= 0}>
+                    <option key={v.id} value={v.attribute_value}>
                       {v.attribute_value}
                     </option>
                   ))}
@@ -158,7 +171,6 @@ export default function ProductInfo({
                         key={v.id}
                         type="button"
                         aria-pressed={sel}
-                        disabled={v.stock_quantity <= 0}
                         onClick={() => pick(attr, v.attribute_value)}
                         className={`min-w-12 border px-4 py-2.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through ${
                           sel
@@ -204,9 +216,8 @@ export default function ProductInfo({
       </div>
 
       <p className="mt-5 text-xs text-umber">
-        {outOfStock ? 'Out of stock' : 'In stock'}
+        {outOfStock ? 'Out of stock' : product.fomoQuantity ? `Only ${product.fomoQuantity} left in stock` : 'In stock'}
         {shipsText && !outOfStock ? ` · ${shipsText}` : ''}
-        {stock !== null && stock > 0 && stock <= 5 ? ` · Only ${stock} left` : ''}
       </p>
 
       <div className="mt-6 border-t border-espresso/10 pt-6">

@@ -1,6 +1,6 @@
 'use client';
 
-import type { RelatedCard } from '@/lib/product-ui';
+import { getFinalPrice, type RelatedCard } from '@/lib/product-ui';
 import Link from 'next/link';
 import { useRef } from 'react';
 import BestSellerBadge from './best-seller-badge';
@@ -65,7 +65,10 @@ export default function RelatedShelf({ products }: { products: RelatedCard[] }) 
                 {p.isBestSeller && <BestSellerBadge corner />}
               </div>
               <p className="mt-3 text-sm text-espresso">{p.name}</p>
-              <p className="mt-1 font-mono-label text-sm text-umber">{formatPrice(p.price)}</p>
+              <p className="mt-1 font-mono-label text-sm text-umber">
+                {formatPrice(getFinalPrice(p.price, p.discountPercent))}
+                {p.discountPercent > 0 && <span className="ml-2 line-through opacity-60">{formatPrice(p.price)}</span>}
+              </p>
               <div className="mt-1.5">
                 <StarRating compact rating={p.rating} count={p.count} />
               </div>
