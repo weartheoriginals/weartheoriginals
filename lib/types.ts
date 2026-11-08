@@ -23,6 +23,9 @@ export interface Product {
   category_id: string | null;
   is_featured: boolean;
   is_best_seller: boolean;
+  is_in_stock: boolean;
+  fomo_quantity: number | null;
+  discount_percent: number;
   is_active: boolean;
   created_at: string;
   // Structured listing content (added in migration 3)

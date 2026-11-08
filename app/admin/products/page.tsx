@@ -15,6 +15,9 @@ const emptyDetails = {
   description: '',
   is_featured: false,
   is_best_seller: false,
+  is_in_stock: true,
+  fomo_quantity: '',
+  discount_percent: '',
   is_active: true,
   brand_name: '',
   materials: '',
@@ -109,6 +112,9 @@ export default function AdminProductsPage() {
       description: p.description ?? '',
       is_featured: p.is_featured,
       is_best_seller: p.is_best_seller,
+      is_in_stock: p.is_in_stock,
+      fomo_quantity: p.fomo_quantity !== null ? String(p.fomo_quantity) : '',
+      discount_percent: p.discount_percent ? String(p.discount_percent) : '',
       is_active: p.is_active,
       brand_name: p.brand_name ?? '',
       materials: p.materials ?? '',
@@ -159,6 +165,9 @@ export default function AdminProductsPage() {
       description: details.description.trim() || null,
       is_featured: details.is_featured,
       is_best_seller: details.is_best_seller,
+      is_in_stock: details.is_in_stock,
+      fomo_quantity: details.fomo_quantity === '' ? null : details.fomo_quantity,
+      discount_percent: details.discount_percent === '' ? 0 : details.discount_percent,
       is_active: details.is_active,
       brand_name: details.brand_name.trim() || null,
       materials: details.materials.trim() || null,
@@ -606,29 +615,24 @@ export default function AdminProductsPage() {
                     />
                   </div>
 
-                  <div className="flex gap-8">
+                  <div className="flex gap-8 flex-wrap">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={details.is_featured}
-                        onChange={e =>
-                          setDetails(d => ({
-                            ...d,
-                            is_featured: e.target.checked,
-                          }))
-                        }
+                        onChange={e => setDetails(d => ({ ...d, is_featured: e.target.checked }))}
                         className="accent-saddle"
                       />
                       <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Featured</span>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={details.is_best_seller}
-                          onChange={e => setDetails(d => ({ ...d, is_best_seller: e.target.checked }))}
-                          className="accent-saddle"
-                        />
-                        <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Best Seller</span>
-                      </label>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={details.is_best_seller}
+                        onChange={e => setDetails(d => ({ ...d, is_best_seller: e.target.checked }))}
+                        className="accent-saddle"
+                      />
+                      <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Best Seller</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -639,6 +643,46 @@ export default function AdminProductsPage() {
                       />
                       <span className="font-mono-label text-xs uppercase tracking-wider text-umber">Active</span>
                     </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={details.is_in_stock}
+                        onChange={e => setDetails(d => ({ ...d, is_in_stock: e.target.checked }))}
+                        className="accent-saddle"
+                      />
+                      <span className="font-mono-label text-xs uppercase tracking-wider text-umber">In Stock</span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">
+                        Discount (%)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={details.discount_percent}
+                        onChange={e => setDetails(d => ({ ...d, discount_percent: e.target.value }))}
+                        placeholder="0 = no discount"
+                        className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">
+                        "Only X left" number
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={details.fomo_quantity}
+                        onChange={e => setDetails(d => ({ ...d, fomo_quantity: e.target.value }))}
+                        placeholder="Empty = off"
+                        className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
+                      />
+                    </div>
                   </div>
 
                   <hr className="border-(--hairline)" />

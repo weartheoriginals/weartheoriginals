@@ -34,6 +34,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.price !== undefined) updates.price = parseFloat(body.price);
   if (body.is_featured !== undefined) updates.is_featured = body.is_featured;
   if (body.is_best_seller !== undefined) updates.is_best_seller = body.is_best_seller;
+  if (body.is_in_stock !== undefined) updates.is_in_stock = body.is_in_stock;
+  if (body.fomo_quantity !== undefined) updates.fomo_quantity = body.fomo_quantity ? parseInt(body.fomo_quantity) : null;
+  if (body.discount_percent !== undefined)
+    updates.discount_percent = body.discount_percent ? parseFloat(body.discount_percent) : 0;
   if (body.is_active !== undefined) updates.is_active = body.is_active;
   if (body.brand_name !== undefined) updates.brand_name = body.brand_name?.trim() || null;
   if (body.materials !== undefined) updates.materials = body.materials?.trim() || null;
