@@ -13,7 +13,7 @@ function formatPrice(amount: number) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 0,
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
   }).format(amount);
 }
 
@@ -97,7 +97,13 @@ export default function ProductInfo({
         )}
       </div>
 
-      <div className="mt-2">
+      {!outOfStock && product.fomoQuantity && (
+        <p className="mt-3 inline-flex items-center gap-2 border border-brass/40 bg-brass/10 px-3 py-1.5 font-mono-label text-xs uppercase tracking-wider text-brass">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-brass" />
+          Only {product.fomoQuantity} left in stock
+        </p>
+      )}
+      <div className="mt-3">
         <StarRating rating={rating.rating} count={rating.count} />
       </div>
 
@@ -216,7 +222,7 @@ export default function ProductInfo({
       </div>
 
       <p className="mt-5 text-xs text-umber">
-        {outOfStock ? 'Out of stock' : product.fomoQuantity ? `Only ${product.fomoQuantity} left in stock` : 'In stock'}
+        {outOfStock ? 'Out of stock' : 'In stock'}
         {shipsText && !outOfStock ? ` · ${shipsText}` : ''}
       </p>
 
