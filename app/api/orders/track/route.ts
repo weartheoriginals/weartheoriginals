@@ -1,5 +1,5 @@
-import { getSupabaseAdmin } from "@/lib/supabase";
-import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
 
 const supabaseAdmin = getSupabaseAdmin();
 
@@ -15,20 +15,21 @@ export async function POST(request: NextRequest) {
   const email = body.email?.trim().toLowerCase();
 
   if (!orderNumber || !email) {
-    return NextResponse.json(
-      { success: false, error: "order_number and email are required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ success: false, error: 'order_number and email are required' }, { status: 400 });
   }
 
   const { data: order, error: orderError } = await supabaseAdmin
-    .from("orders")
+    .from('orders')
     .select(
       `
       id,
       order_number,
       status,
       total_amount,
+      shipping_amount,
+      payment_currency,
+      payment_amount,
+      payment_submitted_at,
       shipping_address,
       created_at,
       order_items (
@@ -43,8 +44,8 @@ export async function POST(request: NextRequest) {
       order_status_history ( status, happened_at )
     `,
     )
-    .eq("order_number", orderNumber)
-    .ilike("email", email)
+    .eq('order_number', orderNumber)
+    .ilike('email', email.replace(/[\\%_]/g, '\\$&'))
     .single();
 
   // PGRST116 = no rows — same generic message either way, don't leak which part failed
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: "No order found matching that order number and email",
+        error: 'No order found matching that order number and email',
       },
       { status: 404 },
     );
