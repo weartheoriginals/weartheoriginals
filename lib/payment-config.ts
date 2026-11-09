@@ -16,8 +16,6 @@ export type CurrencyConfig = {
   bank: BankDetailRow[];
 };
 
-export const PAYMENT_REFERENCE_PREFIX = 'OG';
-
 // Replace placeholder values later; no component edits needed.
 export const PAYMENT_CURRENCIES: Record<PaymentCurrency, CurrencyConfig> = {
   USD: {
@@ -84,9 +82,4 @@ export function formatCurrency(amount: number, currency: PaymentCurrency): strin
     currency,
     minimumFractionDigits: 2,
   }).format(amount);
-}
-
-/** Mock reference for the front-end build. Replace with the server-issued order number later. */
-export function generateMockReference(): string {
-  return `${PAYMENT_REFERENCE_PREFIX}-${Math.floor(10000 + Math.random() * 90000)}`;
 }
