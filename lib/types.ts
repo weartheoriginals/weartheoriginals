@@ -178,7 +178,6 @@ export interface CreateOrderInput {
 export interface CreateOrderItemInput {
   product_id: string;
   quantity: number;
-  unit_price: number;
   variant_ids: string[];
 }
 

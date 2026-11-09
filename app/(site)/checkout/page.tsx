@@ -1,8 +1,7 @@
 'use client';
 
-import CheckoutPaymentStep from '@/components/checkout-payment-step';
 import { useCart } from '@/lib/cart-context';
-import { generateMockReference } from '@/lib/payment-config';
+import { PAYMENT_CURRENCIES, convertFromUSD, formatCurrency, type PaymentCurrency } from '@/lib/payment-config';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -83,7 +82,7 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [serverError, setServerError] = useState('');
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
-  const [reference] = useState(() => generateMockReference());
+  const [currency, setCurrency] = useState<PaymentCurrency>('USD');
 
   const shipping = subtotal >= 500 ? 0 : 25;
   const grandTotal = subtotal + shipping;
@@ -109,55 +108,59 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   }
 
-  // async function handlePlaceOrder() {
-  //   if (!validate()) return;
-
-  //   setPlacing(true);
-  //   setServerError('');
-
-  //   try {
-  //     const res = await fetch('/api/orders', {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({
-  //         full_name: `${form.first_name.trim()} ${form.last_name.trim()}`.trim(),
-  //         email: form.email.trim(),
-  //         phone: form.phone.trim(),
-  //         shipping_address: {
-  //           line1: form.address.trim(),
-  //           city: form.city.trim(),
-  //           postal_code: form.postal_code.trim(),
-  //           country: form.country.trim(),
-  //         },
-  //         notes: form.notes.trim() || undefined,
-  //         items: items.map(item => ({
-  //           product_id: item.product_id,
-  //           quantity: item.quantity,
-  //           variant_ids: item.variantIds,
-  //         })),
-  //       }),
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (!data.success) {
-  //       setServerError(data.error ?? 'Something went wrong. Please try again.');
-  //       setPlacing(false);
-  //       return;
-  //     }
-
-  //     clearCart();
-  //     router.push(`/order-confirmation?order_id=${data.data.id}`);
-  //   } catch {
-  //     setServerError('Network error. Please check your connection and try again.');
-  //     setPlacing(false);
-  //   }
-  // }
-
   function handleContinueToPayment() {
     if (!validate()) return;
     setStep('payment');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function handlePlaceOrder() {
+    if (placing) return;
+    setPlacing(true);
+    setServerError('');
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: `${form.first_name.trim()} ${form.last_name.trim()}`.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          shipping_address: {
+            line1: form.address.trim(),
+            city: form.city.trim(),
+            postal_code: form.postal_code.trim(),
+            country: form.country.trim(),
+          },
+          payment_currency: currency,
+          notes: form.notes.trim() || undefined,
+          items: items.map(item => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            variant_ids: item.variantIds,
+          })),
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!json.success) {
+        setServerError(json.error ?? 'Something went wrong. Please try again.');
+        setPlacing(false);
+        return;
+      }
+
+      sessionStorage.setItem(
+        'wto_last_order',
+        JSON.stringify({ order_number: json.data.order_number, email: form.email.trim() }),
+      );
+      clearCart();
+      router.push('/order-confirmation');
+    } catch {
+      setServerError('Network error. Please check your connection and try again.');
+      setPlacing(false);
+    }
   }
 
   if (items.length === 0) {
@@ -212,12 +215,49 @@ export default function CheckoutPage() {
           </div>
 
           {step === 'payment' ? (
-            <CheckoutPaymentStep
-              totalUSD={grandTotal}
-              reference={reference}
-              senderName={`${form.first_name} ${form.last_name}`.trim()}
-              onBack={() => setStep('shipping')}
-            />
+            <div>
+              <h2 className="font-display text-xl text-espresso mb-6">Payment Method</h2>
+              <p className="font-mono-label text-[11px] uppercase text-umber mb-3">Select payment currency</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {(Object.keys(PAYMENT_CURRENCIES) as PaymentCurrency[]).map(code => {
+                  const cfg = PAYMENT_CURRENCIES[code];
+                  const selected = currency === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setCurrency(code)}
+                      className={`text-left border px-4 py-4 transition-colors ${
+                        selected ? 'border-espresso bg-espresso/5' : 'border-espresso/20 hover:border-espresso/50'
+                      }`}
+                    >
+                      <span className="font-mono-label text-[12px] uppercase text-espresso block">{code}</span>
+                      <span className="text-xs text-umber/70 block mt-1">{cfg.name}</span>
+                      <span className="font-display text-lg text-espresso block mt-2">
+                        {formatCurrency(convertFromUSD(grandTotal, code), code)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 border border-espresso/10 bg-umber/5 px-4 py-4">
+                <p className="font-mono-label text-[11px] uppercase text-brass mb-1">Bank Transfer</p>
+                <p className="text-sm text-umber/80">
+                  Pay by bank transfer. After you place the order you will get your order number and our bank details. Your
+                  order is reserved while we verify the payment.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setStep('shipping')}
+                className="mt-6 font-mono-label text-[11px] uppercase text-umber stitch-underline"
+              >
+                ← Back to delivery
+              </button>
+            </div>
           ) : (
             <>
               <h2 className="font-display text-xl text-espresso mb-6">Delivery Information</h2>
@@ -379,6 +419,17 @@ export default function CheckoutPage() {
                   Your order is reserved while we verify your payment.
                 </p>
               </>
+            )}
+
+            {step === 'payment' && (
+              <button
+                type="button"
+                onClick={handlePlaceOrder}
+                disabled={placing}
+                className="mt-6 block w-full bg-espresso text-ivory font-mono-label text-[12px] uppercase py-4 text-center hover:bg-umber transition-colors disabled:opacity-50"
+              >
+                {placing ? 'Placing order...' : 'Place Order'}
+              </button>
             )}
 
             <div className="text-center mt-4">
