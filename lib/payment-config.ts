@@ -1,14 +1,9 @@
 export type PaymentCurrency = 'USD' | 'GBP' | 'CAD';
 
-export type BankDetails = {
-  accountHolder: string;
-  bankName: string;
-  accountNumber: string;
-  routingLabel: string; // "Routing number" / "Sort code" / "Transit / Institution no."
-  routingValue: string;
-  swift: string;
-  bankAddress: string;
-};
+export type BankDetailRow = { label: string; value: string };
+
+export const SHIPPING_FLAT_USD = 25;
+export const FREE_SHIPPING_THRESHOLD_USD = 500;
 
 export type CurrencyConfig = {
   code: PaymentCurrency;
@@ -18,7 +13,7 @@ export type CurrencyConfig = {
   /** Multiplier applied to the USD total. Update as needed. */
   rateFromUSD: number;
   hint: string;
-  bank: BankDetails;
+  bank: BankDetailRow[];
 };
 
 export const PAYMENT_REFERENCE_PREFIX = 'OG';
@@ -32,15 +27,15 @@ export const PAYMENT_CURRENCIES: Record<PaymentCurrency, CurrencyConfig> = {
     locale: 'en-US',
     rateFromUSD: 1,
     hint: 'Recommended for customers in the USA.',
-    bank: {
-      accountHolder: 'Wear The Originals',
-      bankName: 'Payoneer-provided bank name',
-      accountNumber: '0000000000',
-      routingLabel: 'Routing number',
-      routingValue: '000000000',
-      swift: 'XXXXUS00XXX',
-      bankAddress: 'Placeholder Address, City, State, USA',
-    },
+    bank: [
+      { label: 'Beneficiary name', value: 'Arham Ahmed' },
+      { label: 'Bank name', value: 'Citibank' },
+      { label: 'Account type', value: 'CHECKING' },
+      { label: 'Account number', value: '70585660002557112' },
+      { label: 'Routing number', value: '031100209' },
+      { label: 'SWIFT/BIC', value: 'CITIUS33' },
+      { label: 'Bank address', value: '111 Wall Street New York, NY 10043 USA' },
+    ],
   },
   GBP: {
     code: 'GBP',
@@ -49,15 +44,15 @@ export const PAYMENT_CURRENCIES: Record<PaymentCurrency, CurrencyConfig> = {
     locale: 'en-GB',
     rateFromUSD: 0.79,
     hint: 'Recommended for customers in the UK.',
-    bank: {
-      accountHolder: 'Wear The Originals',
-      bankName: 'Payoneer-provided bank name',
-      accountNumber: '00000000',
-      routingLabel: 'Sort code',
-      routingValue: '00-00-00',
-      swift: 'XXXXGB00XXX',
-      bankAddress: 'Placeholder Address, London, UK',
-    },
+    bank: [
+      { label: 'Beneficiary name', value: 'Arham Ahmed' },
+      { label: 'Bank name', value: 'Citibank' },
+      { label: 'Account number', value: '56250459' },
+      { label: 'Sort code', value: '185008' },
+      { label: 'IBAN', value: 'GB30CITI18500856250459' },
+      { label: 'SWIFT/BIC', value: 'CITIGB2L' },
+      { label: 'Bank address', value: 'Canada Square, Canary Wharf London, E14 5LB United Kingdom' },
+    ],
   },
   CAD: {
     code: 'CAD',
@@ -66,15 +61,15 @@ export const PAYMENT_CURRENCIES: Record<PaymentCurrency, CurrencyConfig> = {
     locale: 'en-CA',
     rateFromUSD: 1.36,
     hint: 'Recommended for customers in Canada.',
-    bank: {
-      accountHolder: 'Wear The Originals',
-      bankName: 'Payoneer-provided bank name',
-      accountNumber: '0000000',
-      routingLabel: 'Institution / transit no.',
-      routingValue: '000 / 00000',
-      swift: 'XXXXCA00XXX',
-      bankAddress: 'Placeholder Address, Toronto, Canada',
-    },
+    bank: [
+      { label: 'Beneficiary name', value: 'Arham Ahmed' },
+      { label: 'Bank name', value: 'Digital Commerce Bank' },
+      { label: 'Bank address', value: '736 Meridian Road NE Calgary, Alberta T2A 2N7, Canada' },
+      { label: 'Institution number', value: '0352' },
+      { label: 'Transit number', value: '10009' },
+      { label: 'Account type', value: 'CHECKING' },
+      { label: 'Account number', value: '964757546' },
+    ],
   },
 };
 

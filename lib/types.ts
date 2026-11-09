@@ -1,3 +1,5 @@
+import type { PaymentCurrency } from '@/lib/payment-config';
+
 export interface Category {
   id: string;
   name: string;
@@ -80,6 +82,14 @@ export interface Order {
   shipping_address: ShippingAddress;
   status: OrderStatus;
   total_amount: number;
+  shipping_amount: number;
+  payment_currency: PaymentCurrency | null;
+  payment_amount: number | null;
+  exchange_rate: number | null;
+  sender_name: string | null;
+  transfer_date: string | null;
+  receipt_path: string | null;
+  payment_submitted_at: string | null;
   created_at: string;
 }
 
@@ -106,6 +116,10 @@ export interface TrackedOrder {
   order_number: string;
   status: OrderStatus;
   total_amount: number;
+  shipping_amount: number;
+  payment_currency: PaymentCurrency | null;
+  payment_amount: number | null;
+  payment_submitted_at: string | null;
   shipping_address: ShippingAddress;
   created_at: string;
   order_items: TrackedOrderItem[];
@@ -117,7 +131,15 @@ export interface TrackOrderInput {
   email: string;
 }
 
-export type OrderStatus = 'confirmed' | 'processing' | 'dispatched' | 'in_transit' | 'delivered' | 'cancelled';
+export type OrderStatus =
+  | 'awaiting_payment'
+  | 'payment_review'
+  | 'confirmed'
+  | 'processing'
+  | 'dispatched'
+  | 'in_transit'
+  | 'delivered'
+  | 'cancelled';
 
 export interface ShippingAddress {
   line1: string;
@@ -149,6 +171,7 @@ export interface CreateOrderInput {
   phone?: string;
   shipping_address: ShippingAddress;
   items: CreateOrderItemInput[];
+  payment_currency: PaymentCurrency;
   notes?: string;
 }
 
