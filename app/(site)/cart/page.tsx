@@ -20,10 +20,7 @@ export default function CartPage() {
         <p className="font-mono-label text-[11px] uppercase text-brass mb-4">Your Bag</p>
         <h1 className="font-display font-light text-3xl md:text-4xl text-espresso">Your bag is empty.</h1>
         <p className="mt-4 text-umber">Take a look through our latest pieces.</p>
-        <Link
-          href="/c/mens-jackets"
-          className="stitch-underline font-mono-label text-[12px] uppercase text-espresso inline-block mt-8"
-        >
+        <Link href="/" className="stitch-underline font-mono-label text-[12px] uppercase text-espresso inline-block mt-8">
           Shop Jackets
         </Link>
       </main>
