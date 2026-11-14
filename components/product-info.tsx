@@ -5,6 +5,7 @@ import { getFinalPrice, type ProductSummary } from '@/lib/product-ui';
 import type { GroupedVariants, ProductVariant } from '@/lib/types';
 import { isSelectionComplete, resolveVariantIds } from '@/lib/variant-helpers';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import BestSellerBadge from './best-seller-badge';
 import StarRating from './star-rating';
@@ -35,6 +36,7 @@ export default function ProductInfo({
   rating: { rating: number; count: number };
 }) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [added, setAdded] = useState(false);
   const [error, setError] = useState('');
 
@@ -48,7 +50,7 @@ export default function ProductInfo({
     setError('');
   }
 
-  function handleAdd() {
+  function addToCart(): boolean {
     const base = {
       product_id: product.id,
       slug: product.slug,
@@ -59,17 +61,34 @@ export default function ProductInfo({
     };
 
     if (attrs.length > 0) {
-      if (!isSelectionComplete(grouped, selections)) return setError('Please select an option for every attribute.');
+      if (!isSelectionComplete(grouped, selections)) {
+        setError('Please select an option for every attribute.');
+        return false;
+      }
       const variantIds = resolveVariantIds(variants, selections);
-      if (!variantIds) return setError('That combination is not available.');
-      if (outOfStock) return setError('This product is out of stock.');
+      if (!variantIds) {
+        setError('That combination is not available.');
+        return false;
+      }
+      if (outOfStock) {
+        setError('This product is out of stock.');
+        return false;
+      }
       addItem({ ...base, customizations: selections, variantIds });
     } else {
       addItem({ ...base, customizations: {}, variantIds: [] });
     }
+    return true;
+  }
 
+  function handleAdd() {
+    if (!addToCart()) return;
     setAdded(true);
     setTimeout(() => setAdded(false), 2200);
+  }
+
+  function handleBuyNow() {
+    if (addToCart()) router.push('/cart');
   }
 
   const shipsText =
@@ -151,6 +170,15 @@ export default function ProductInfo({
         className="mt-8 w-full bg-espresso text-ivory font-mono-label text-[12px] uppercase py-4 hover:bg-umber transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {outOfStock ? 'Out of Stock' : added ? 'Added to Bag' : 'Add to Bag'}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleBuyNow}
+        disabled={outOfStock}
+        className="mt-3 w-full bg-brass text-ivory font-mono-label text-[12px] uppercase py-4 hover:bg-saddle transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Buy Now
       </button>
 
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-espresso/10 pt-6">
