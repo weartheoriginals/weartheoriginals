@@ -180,9 +180,10 @@ function OrderPanel({ id, onClose, onChanged }: { id: string; onClose: () => voi
   const currency = detail?.payment_currency ?? 'USD';
   const isPdf = detail?.receipt_path?.toLowerCase().endsWith('.pdf');
   const subtotal = detail ? detail.items.reduce((sum, i) => sum + Number(i.unit_price) * i.quantity, 0) : 0;
-  const addressRows = Object.entries(detail?.shipping_address ?? {}).filter(
-    ([, v]) => (typeof v === 'string' || typeof v === 'number') && String(v).trim() !== '',
-  );
+  const addr = (detail?.shipping_address ?? {}) as Record<string, unknown>;
+  const addressLines = [addr.line1, addr.line2, [addr.city, addr.postal_code].filter(Boolean).join(' '), addr.country]
+    .map(v => (typeof v === 'string' ? v.trim() : ''))
+    .filter(Boolean);
 
   return (
     <div className="fixed inset-0 z-60 flex justify-end">
@@ -263,7 +264,9 @@ function OrderPanel({ id, onClose, onChanged }: { id: string; onClose: () => voi
                 </Row>
                 <Row label="Customer pays">{money(detail.payment_amount, currency, true)}</Row>
                 <Row label="Order total (USD)">{money(detail.total_amount)}</Row>
-                <Row label="Rate used">{detail.exchange_rate ?? '—'}</Row>
+                <Row label="Rate used">
+                  {detail.exchange_rate ? `1 USD = ${Number(detail.exchange_rate)} ${currency}` : '—'}
+                </Row>
                 <Row label="Sender name">{detail.sender_name ?? '—'}</Row>
                 <Row label="Transfer date">{detail.transfer_date ?? '—'}</Row>
                 <Row label="Receipt sent">{fmtDate(detail.payment_submitted_at)}</Row>
@@ -366,14 +369,14 @@ function OrderPanel({ id, onClose, onChanged }: { id: string; onClose: () => voi
 
               {/* Address */}
               <Section title="Shipping address">
-                {addressRows.length === 0 ? (
+                {addressLines.length === 0 ? (
                   <p className="text-sm text-umber">No address.</p>
                 ) : (
-                  addressRows.map(([k, v]) => (
-                    <Row key={k} label={k.replace(/_/g, ' ')}>
-                      {String(v)}
-                    </Row>
-                  ))
+                  <div className="text-sm text-espresso space-y-0.5">
+                    {addressLines.map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                  </div>
                 )}
               </Section>
 
