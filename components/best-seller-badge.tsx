@@ -11,7 +11,7 @@ export default function BestSellerBadge({ corner = false, className = '' }: { co
 
   return (
     <span
-      className={`inline-block -rotate-6 bg-brass px-3 py-1.5 font-mono-label text-[10px] uppercase tracking-widest text-ivory shadow-sm ${className}`}
+      className={`inline-block bg-brass px-3 py-1.5 font-mono-label text-[10px] uppercase tracking-widest text-ivory shadow-sm ${className}`}
     >
       Best Seller
     </span>
