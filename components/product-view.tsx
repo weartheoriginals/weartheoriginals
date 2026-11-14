@@ -1,10 +1,9 @@
 'use client';
 
-import { getFakeRating, isColorAttribute, type ColorOption, type GalleryImage, type ProductSummary } from '@/lib/product-ui';
+import { getFakeRating, isColorAttribute, type GalleryImage, type ProductSummary } from '@/lib/product-ui';
 import type { ProductVariant } from '@/lib/types';
 import { groupVariants } from '@/lib/variant-helpers';
 import { useMemo, useState } from 'react';
-import ColorVariantView from './color-variant-view';
 import MobileGallery from './mobile-gallery';
 import ProductGallery from './product-gallery';
 import ProductInfo from './product-info';
@@ -24,20 +23,6 @@ export default function ProductView({
   const [selections, setSelections] = useState<Record<string, string>>(() =>
     Object.fromEntries(Object.keys(grouped).map(k => [k, grouped[k][0].attribute_value])),
   );
-
-  const colors: ColorOption[] = useMemo(() => {
-    if (!colorKey) return [];
-    return grouped[colorKey].map(v => {
-      const first = images.find(i => i.variantId === v.id);
-      const swatch = first ?? images[0];
-      return {
-        id: v.id,
-        name: v.attribute_value,
-        swatch: swatch.url,
-        hero: (first ?? swatch).url,
-      };
-    });
-  }, [grouped, colorKey, images]);
 
   const activeColor = colorKey ? grouped[colorKey].find(v => v.attribute_value === selections[colorKey]) : undefined;
 
@@ -84,16 +69,9 @@ export default function ProductView({
           grouped={grouped}
           selections={selections}
           onSelect={select}
-          colors={colors}
           rating={getFakeRating(product.slug)}
         />
       </div>
-
-      {colorKey && colors.length > 1 && (
-        <div className="hidden md:block">
-          <ColorVariantView colors={colors} selected={selections[colorKey]} onSelect={name => select(colorKey, name)} />
-        </div>
-      )}
     </>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCart } from '@/lib/cart-context';
-import { getFinalPrice, isColorAttribute, type ColorOption, type ProductSummary } from '@/lib/product-ui';
+import { getFinalPrice, type ProductSummary } from '@/lib/product-ui';
 import type { GroupedVariants, ProductVariant } from '@/lib/types';
 import { isSelectionComplete, resolveVariantIds } from '@/lib/variant-helpers';
 import Link from 'next/link';
@@ -24,7 +24,6 @@ export default function ProductInfo({
   grouped,
   selections,
   onSelect,
-  colors,
   rating,
 }: {
   product: ProductSummary;
@@ -33,7 +32,6 @@ export default function ProductInfo({
   grouped: GroupedVariants;
   selections: Record<string, string>;
   onSelect: (attr: string, value: string) => void;
-  colors: ColorOption[];
   rating: { rating: number; count: number };
 }) {
   const { addItem } = useCart();
@@ -111,12 +109,9 @@ export default function ProductInfo({
         <div className="mt-6 border-t border-espresso/10 pt-6 space-y-7">
           {attrs.map(attr => (
             <div key={attr}>
-              <p className="text-sm text-espresso">
-                {attr}
-                <span className="ml-2 hidden text-umber md:inline">{selections[attr]}</span>
-              </p>
+              <p className="text-sm text-espresso">{attr}</p>
 
-              <div className="relative mt-3 md:hidden">
+              <div className="relative mt-3">
                 <select
                   value={selections[attr]}
                   onChange={e => pick(attr, e.target.value)}
@@ -142,54 +137,6 @@ export default function ProductInfo({
                   <path d="M1 1.5l5 5 5-5" />
                 </svg>
               </div>
-
-              {isColorAttribute(attr) ? (
-                <div className="mt-3 hidden flex-wrap gap-3 md:flex">
-                  {colors.map(c => {
-                    const sel = c.name === selections[attr];
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        aria-pressed={sel}
-                        aria-label={c.name}
-                        onClick={() => pick(attr, c.name)}
-                        className="group flex flex-col items-center gap-2"
-                      >
-                        <span
-                          className={`block h-20 w-20 md:h-24 md:w-24 overflow-hidden border bg-umber/5 transition-colors ${
-                            sel ? 'border-espresso' : 'border-espresso/15 group-hover:border-espresso/50'
-                          }`}
-                        >
-                          <img src={c.swatch} alt="" className="h-full w-full object-cover" />
-                        </span>
-                        <span className={`text-xs ${sel ? 'text-espresso' : 'text-umber'}`}>{c.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {grouped[attr].map(v => {
-                    const sel = v.attribute_value === selections[attr];
-                    return (
-                      <button
-                        key={v.id}
-                        type="button"
-                        aria-pressed={sel}
-                        onClick={() => pick(attr, v.attribute_value)}
-                        className={`min-w-12 border px-4 py-2.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through ${
-                          sel
-                            ? 'border-espresso bg-espresso text-ivory'
-                            : 'border-espresso/20 text-espresso hover:border-espresso'
-                        }`}
-                      >
-                        {v.attribute_value}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           ))}
         </div>
