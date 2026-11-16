@@ -22,7 +22,7 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
 
   return (
     <>
-      <div className="h-[97px]" />
+      <div className="h-24.25" />
       <header className="fixed inset-x-0 top-0 z-40 bg-ivory/90 backdrop-blur-sm border-b border-espresso/10">
         <div className="mx-auto max-w-350 px-6 md:px-10">
           <div

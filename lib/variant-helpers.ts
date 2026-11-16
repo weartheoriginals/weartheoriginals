@@ -10,7 +10,11 @@ import type { GroupedVariants, ProductVariant } from '@/lib/types';
 export function groupVariants(variants: ProductVariant[]): GroupedVariants {
   const grouped: GroupedVariants = {};
 
-  for (const variant of variants) {
+  const sorted = [...variants].sort(
+    (a, b) => (a.attribute_order ?? 0) - (b.attribute_order ?? 0) || a.display_order - b.display_order,
+  );
+
+  for (const variant of sorted) {
     if (!grouped[variant.attribute_name]) {
       grouped[variant.attribute_name] = [];
     }

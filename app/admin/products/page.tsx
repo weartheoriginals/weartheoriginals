@@ -74,6 +74,7 @@ export default function AdminProductsPage() {
   });
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [savingVariant, setSavingVariant] = useState(false);
+  const [dragAttr, setDragAttr] = useState<string | null>(null);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
@@ -243,6 +244,42 @@ export default function AdminProductsPage() {
   }
 
   const colorVariants = variants.filter(v => /^colou?r$/i.test(v.attribute_name));
+
+  const attributeNames = Array.from(
+    new Set(
+      [...variants]
+        .sort((a, b) => (a.attribute_order ?? 0) - (b.attribute_order ?? 0) || a.display_order - b.display_order)
+        .map(v => v.attribute_name),
+    ),
+  );
+
+  async function handleReorderAttributes(from: string, to: string) {
+    if (!editingProduct || from === to) return;
+
+    const fromIdx = attributeNames.indexOf(from);
+    const toIdx = attributeNames.indexOf(to);
+    const next = [...attributeNames];
+    next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, from);
+
+    const before = variants;
+    setVariants(prev => prev.map(v => ({ ...v, attribute_order: next.indexOf(v.attribute_name) })));
+    setError('');
+
+    const headers = await authHeaders();
+    const res = await fetch(`/api/admin/products/${editingProduct.id}/variants/reorder`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ attributes: next }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      setVariants(before);
+      setError(data.error);
+      return;
+    }
+    fetchProducts(true);
+  }
 
   async function handleImagePick(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -906,38 +943,60 @@ export default function AdminProductsPage() {
 
               {activeTab === 'variants' && editingProduct && (
                 <div>
+                  <p className="text-xs text-umber/70 mb-2">
+                    Drag a group by the handle to change the order it shows on the product page.
+                  </p>
                   <div className="border border-(--hairline) mb-5">
-                    <div className="grid grid-cols-[1fr_1fr_80px_110px] px-3 py-2 bg-black/2 border-b border-(--hairline) gap-3">
-                      {['Attribute', 'Value', 'Stock', ''].map(h => (
-                        <p key={h} className="font-mono-label text-[0.65rem] uppercase tracking-wider text-umber">
-                          {h}
-                        </p>
-                      ))}
-                    </div>
                     {variants.length === 0 ? (
                       <p className="text-sm text-umber p-4 text-center">No variants yet</p>
                     ) : (
-                      variants.map((v, i) => (
+                      attributeNames.map(name => (
                         <div
-                          key={v.id}
-                          className={`grid grid-cols-[1fr_1fr_80px_110px] px-3 py-2 gap-3 items-center ${
-                            i < variants.length - 1 ? 'border-b border-(--hairline)' : ''
-                          }`}
+                          key={name}
+                          onDragOver={e => e.preventDefault()}
+                          onDrop={() => {
+                            if (dragAttr) handleReorderAttributes(dragAttr, name);
+                            setDragAttr(null);
+                          }}
+                          className={`border-b border-(--hairline) last:border-0 ${dragAttr === name ? 'opacity-40' : ''}`}
                         >
-                          <p className="text-sm text-espresso">{v.attribute_name}</p>
-                          <p className="text-sm text-umber">{v.attribute_value}</p>
-                          <p className="text-sm text-umber">{v.stock_quantity}</p>
-                          <div className="flex gap-3">
-                            <button onClick={() => startEditVariant(v)} className="text-xs text-umber hover:text-saddle">
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteVariant(v.id)}
-                              className="text-xs text-umber hover:text-red-600"
-                            >
-                              Remove
-                            </button>
+                          <div
+                            draggable
+                            onDragStart={() => setDragAttr(name)}
+                            onDragEnd={() => setDragAttr(null)}
+                            className="flex items-center gap-3 px-3 py-2 bg-black/2 cursor-grab active:cursor-grabbing"
+                          >
+                            <span className="text-umber select-none" aria-hidden="true">
+                              ⠿
+                            </span>
+                            <p className="font-mono-label text-xs uppercase tracking-wider text-espresso">{name}</p>
                           </div>
+                          {variants
+                            .filter(v => v.attribute_name === name)
+                            .sort((a, b) => a.display_order - b.display_order)
+                            .map(v => (
+                              <div
+                                key={v.id}
+                                className="grid grid-cols-[1fr_80px_110px] px-3 py-2 gap-3 items-center border-t border-(--hairline)"
+                              >
+                                <p className="text-sm text-umber">{v.attribute_value}</p>
+                                <p className="text-sm text-umber">{v.stock_quantity}</p>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => startEditVariant(v)}
+                                    className="text-xs text-umber hover:text-saddle"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteVariant(v.id)}
+                                    className="text-xs text-umber hover:text-red-600"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                         </div>
                       ))
                     )}

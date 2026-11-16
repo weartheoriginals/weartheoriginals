@@ -57,6 +57,7 @@ export interface ProductVariant {
   attribute_name: string;
   attribute_value: string;
   stock_quantity: number;
+  attribute_order: number;
   display_order: number;
 }
 
