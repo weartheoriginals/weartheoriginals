@@ -174,7 +174,7 @@ export default function AdminBannerPage() {
               <p className="font-mono-label text-xs uppercase tracking-wider text-espresso mb-1">Mobile</p>
               <p className="text-xs text-umber mb-4">Portrait, around 1080 × 1920. Optional.</p>
               <div
-                className="border border-dashed border-(--hairline) cursor-pointer aspect-[9/16] w-full max-w-48 flex items-center justify-center overflow-hidden hover:border-saddle transition-colors"
+                className="border border-dashed border-(--hairline) cursor-pointer aspect-9/16 w-full max-w-48 flex items-center justify-center overflow-hidden hover:border-saddle transition-colors"
                 onClick={() => document.getElementById('banner-upload-mobile')?.click()}
               >
                 {mobilePreview ? (
