@@ -17,15 +17,25 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   const body = await request.json();
-  if (!body.image_url) {
-    return NextResponse.json({ success: false, error: 'image_url is required' }, { status: 400 });
+  const hasMobile = 'mobile_image_url' in body;
+
+  if (!body.image_url && !hasMobile) {
+    return NextResponse.json({ success: false, error: 'image_url or mobile_image_url is required' }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from('site_banner')
-    .upsert({ id: BANNER_ID, image_url: body.image_url, updated_at: new Date().toISOString() })
-    .select()
-    .single();
+  const row: Record<string, unknown> = { id: BANNER_ID, updated_at: new Date().toISOString() };
+  if (body.image_url) row.image_url = body.image_url;
+  if (hasMobile) row.mobile_image_url = body.mobile_image_url || null;
+
+  const { data: existing } = await supabaseAdmin.from('site_banner').select('id').eq('id', BANNER_ID).maybeSingle();
+
+  if (!existing && !body.image_url) {
+    return NextResponse.json({ success: false, error: 'Upload the desktop image first' }, { status: 400 });
+  }
+
+  const { data, error } = await (existing
+    ? supabaseAdmin.from('site_banner').update(row).eq('id', BANNER_ID).select().single()
+    : supabaseAdmin.from('site_banner').insert(row).select().single());
 
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   return NextResponse.json({ success: true, data });

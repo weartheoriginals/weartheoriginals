@@ -22,21 +22,21 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
 
   return (
     <>
-      <div className="h-24.25" />
+      <div className="h-16.25 md:h-20.25" />
       <header className="fixed inset-x-0 top-0 z-40 bg-ivory/90 backdrop-blur-sm border-b border-espresso/10">
         <div className="mx-auto max-w-350 px-6 md:px-10">
           <div
             className={`flex items-center justify-between transition-[height] duration-300 ease-in-out ${
-              scrolled ? 'h-16 md:h-16' : 'h-24 md:h-24'
+              scrolled ? 'h-14 md:h-14' : 'h-16 md:h-20'
             }`}
           >
-            <Link href="/" className="flex items-center pt-3" onClick={() => setMenuOpen(false)}>
+            <Link href="/" className="flex items-center pt-2" onClick={() => setMenuOpen(false)}>
               <Image
                 src="/logo.png"
                 alt="Wear The Originals"
                 width={552}
                 height={198}
-                className={`w-auto transition-[height] duration-300 ease-in-out ${scrolled ? 'h-8 md:h-9' : 'h-10 md:h-12'}`}
+                className={`w-auto transition-[height] duration-300 ease-in-out ${scrolled ? 'h-7 md:h-8' : 'h-9 md:h-11'}`}
                 priority
               />
             </Link>
@@ -102,7 +102,7 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
         aria-hidden={!menuOpen}
         className="md:hidden fixed inset-0 z-40 bg-espresso transition-[clip-path] duration-700 ease-in-out"
         style={{
-          clipPath: menuOpen ? 'circle(150% at calc(100% - 2.25rem) 2.5rem)' : 'circle(0% at calc(100% - 2.25rem) 2.5rem)',
+          clipPath: menuOpen ? 'circle(150% at calc(100% - 2.25rem) 2rem)' : 'circle(0% at calc(100% - 2.25rem) 2rem)',
           pointerEvents: menuOpen ? 'auto' : 'none',
         }}
       >
@@ -110,7 +110,7 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
           type="button"
           aria-label="Close menu"
           onClick={() => setMenuOpen(false)}
-          className="absolute top-8 right-9 text-ivory text-3xl leading-none"
+          className="absolute top-4 right-7 text-ivory text-3xl leading-none"
         >
           ×
         </button>

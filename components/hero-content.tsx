@@ -12,14 +12,17 @@ const ctaReveal = {
   },
 };
 
-export default function HeroContent({ imageUrl }: { imageUrl: string }) {
+export default function HeroContent({ imageUrl, mobileImageUrl }: { imageUrl: string; mobileImageUrl: string | null }) {
   return (
     <section className="relative w-full overflow-hidden bg-espresso">
-      <img
-        src={imageUrl}
-        alt="Hand-stitched leather jacket, detail of the collar and lapel"
-        className="block w-full h-auto max-h-[calc(100svh-6rem)] object-cover object-center"
-      />
+      <picture>
+        <source media="(min-width: 768px)" srcSet={imageUrl} />
+        <img
+          src={mobileImageUrl ?? imageUrl}
+          alt="Hand-stitched leather jacket, detail of the collar and lapel"
+          className="block w-full h-[85svh] md:h-auto md:max-h-[calc(100svh-5rem)] object-cover object-center"
+        />
+      </picture>
 
       <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-espresso/80 via-transparent to-transparent" />
 
