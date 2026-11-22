@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 export default function StitchDivider() {
   return (
     <div className="w-full overflow-hidden" aria-hidden="true">
-      <svg viewBox="0 0 1000 2" preserveAspectRatio="none" className="w-full h-[2px]">
+      <svg viewBox="0 0 1000 2" preserveAspectRatio="none" className="w-full h-0.5">
         <motion.line
           x1="0"
           y1="1"

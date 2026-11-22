@@ -1,4 +1,5 @@
 import CategoryTiles from '@/components/category-tiles';
+import Lookbook from '@/components/lookbook';
 import EditorialBlock from '@/components/editorial-block';
 import Hero from '@/components/hero';
 import { ProductCardData } from '@/components/product-card';
@@ -48,13 +49,28 @@ async function getHomeCategories() {
   return data ?? [];
 }
 
+async function getLookbookImages() {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from('lookbook_images')
+    .select('id, image_url')
+    .order('display_order', { ascending: true });
+
+  if (error) {
+    console.error('Failed to load lookbook images:', error);
+    return [];
+  }
+  return data ?? [];
+}
+
 export default async function HomePage() {
-  const [sections, categories] = await Promise.all([getHomeSections(), getHomeCategories()]);
+  const [sections, categories, lookbook] = await Promise.all([getHomeSections(), getHomeCategories(), getLookbookImages()]);
 
   return (
     <main>
       <Hero />
       <CategoryTiles categories={categories} />
+      <Lookbook images={lookbook} />
       {sections.map((section, index) => (
         <EditorialBlock
           key={section.id}
