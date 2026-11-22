@@ -11,7 +11,7 @@ export default function Lookbook({ images }: { images: LookbookImage[] }) {
             <img
               src={image.image_url}
               alt="OGNLS lookbook"
-              className="block w-full h-[65svh] md:h-[85svh] object-cover object-center"
+              className="block w-full h-[40svh] md:h-[65svh] object-cover object-center"
             />
           </div>
         ))}
