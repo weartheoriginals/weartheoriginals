@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { label: 'Banner', href: '/admin/banner' },
   { label: 'Materials', href: '/admin/materials' },
   { label: 'Home Sections', href: '/admin/home-sections' },
+  { label: 'Lookbook', href: '/admin/lookbook' },
 ];
 
 function createSupabase() {
