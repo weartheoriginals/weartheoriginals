@@ -1,32 +1,6 @@
-"use client";
+import Link from 'next/link';
 
-import { motion } from "motion/react";
-import MagneticLink from "./magnetic-link";
-import StitchDivider from "./stitch-divider";
-
-const textStagger = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-  },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
-  },
-};
-
-const maskReveal = {
-  hidden: { y: "110%" },
-  show: {
-    y: "0%",
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
-  },
-};
+const BEIGE = 'bg-[#eadfce]';
 
 export default function EditorialBlock({
   eyebrow,
@@ -49,88 +23,54 @@ export default function EditorialBlock({
 }) {
   const hasButton = !!ctaLabel && !!href;
 
-  const textContent = (
-    <motion.div
-      variants={textStagger}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: "-10% 0px" }}
-    >
+  const text = (
+    <div className="max-w-md text-[#2b1608]">
       {eyebrow && (
-        <motion.p
-          variants={fadeUp}
-          className="font-mono-label text-[11px] uppercase text-brass mb-4"
-        >
+        <p className="mb-5 flex items-center gap-3 text-[11px] uppercase tracking-wide">
           {eyebrow}
-        </motion.p>
+          <span aria-hidden className="h-px w-10 bg-[#2b1608]/30" />
+        </p>
       )}
-      <h2 className="font-display font-light text-3xl md:text-4xl text-espresso leading-tight overflow-hidden">
-        <motion.span variants={maskReveal} className="block">
-          {title}
-        </motion.span>
-      </h2>
-      {copy && (
-        <motion.p variants={fadeUp} className="mt-5 text-umber leading-relaxed">
-          {copy}
-        </motion.p>
-      )}
+      <h2 className="font-display text-2xl uppercase leading-[1.1] md:text-4xl">{title}</h2>
+      {copy && <p className="mt-4 text-sm leading-relaxed md:text-base">{copy}</p>}
       {hasButton && (
-        <motion.div variants={fadeUp} className="mt-8">
-          <MagneticLink
-            href={href!}
-            className="btn-stitch font-mono-label text-[12px] uppercase"
-          >
-            {ctaLabel}
-            <span aria-hidden className="btn-arrow">
-              →
-            </span>
-          </MagneticLink>
-        </motion.div>
+        <Link
+          href={href!}
+          className="mt-6 inline-flex items-center gap-3 border border-[#2b1608]/70 px-4 py-2.5 text-[11px] uppercase tracking-wide transition-colors duration-200 hover:bg-[#2b1608]/10"
+        >
+          {ctaLabel}
+          <span aria-hidden>→</span>
+        </Link>
       )}
-    </motion.div>
+    </div>
   );
 
   if (!imageUrl) {
     return (
-      <section>
-        <StitchDivider />
-        <div className="px-6 md:px-16 py-16 md:py-24 max-w-2xl mx-auto text-center">
-          {textContent}
-        </div>
+      <section className={`${BEIGE} px-6 py-14 md:py-20`}>
+        <div className="mx-auto flex max-w-2xl justify-center text-center">{text}</div>
       </section>
     );
   }
 
   return (
-    <section>
-      <StitchDivider />
-      <div
-        className={`mx-auto max-w-6xl flex flex-col md:flex-row md:items-center gap-8 md:gap-14 px-6 md:px-16 py-12 md:py-20 ${
-          reverse ? "md:flex-row-reverse" : ""
-        }`}
-      >
-        <div className="w-full md:w-1/2 min-w-0">
-          <div className="relative aspect-4/3 overflow-hidden">
-            <img
-              src={imageUrl}
-              alt={imageAlt ?? title}
-              className="h-full w-full object-cover object-center"
-            />
-            <motion.div
-              initial={{ scaleX: 1 }}
-              whileInView={{ scaleX: 0 }}
-              viewport={{ once: true, margin: "-10% 0px" }}
-              transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
-              style={{ originX: reverse ? 1 : 0 }}
-              className="absolute inset-0 bg-ivory"
-            />
-          </div>
-        </div>
-
-        <div className="w-full md:w-1/2 min-w-0">
-          <div className="max-w-lg">{textContent}</div>
-        </div>
+    <section
+      className={`grid grid-cols-1 border-t border-[#2b1608]/20  md:min-h-80 lg:min-h-90 ${
+        reverse ? 'md:grid-cols-[2fr_3fr]' : 'md:grid-cols-[3fr_2fr]'
+      }`}
+    >
+      <div className={`relative h-56 overflow-hidden md:h-auto ${reverse ? 'md:order-2' : ''}`}>
+        <img src={imageUrl} alt={imageAlt ?? title} className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div
+          className={`pointer-events-none absolute inset-y-0 hidden w-1/3 md:block ${
+            reverse
+              ? 'left-0 bg-linear-to-r from-[#eadfce] to-transparent'
+              : 'right-0 bg-linear-to-l from-[#eadfce] to-transparent'
+          }`}
+        />
       </div>
+
+      <div className={`${BEIGE} flex items-center px-6 py-10 md:px-14 md:py-12 ${reverse ? 'md:order-1' : ''}`}>{text}</div>
     </section>
   );
 }
