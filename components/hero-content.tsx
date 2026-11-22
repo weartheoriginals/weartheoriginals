@@ -1,50 +1,32 @@
-'use client';
-
-import { motion } from 'motion/react';
-import MagneticLink from './magnetic-link';
-
-const ctaReveal = {
-  hidden: { y: 16, opacity: 0 },
-  show: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
-  },
-};
+import Link from 'next/link';
 
 export default function HeroContent({ imageUrl, mobileImageUrl }: { imageUrl: string; mobileImageUrl: string | null }) {
   return (
-    <section className="relative w-full overflow-hidden bg-espresso">
+    <section className="relative w-full h-svh overflow-hidden bg-espresso">
       <picture>
         <source media="(min-width: 768px)" srcSet={imageUrl} />
         <img
           src={mobileImageUrl ?? imageUrl}
-          alt="Hand-stitched leather jacket, detail of the collar and lapel"
-          className="block w-full h-[85svh] md:h-auto md:max-h-[calc(100svh-5rem)] object-cover object-center"
+          alt="OGNLS leather collection"
+          className="block h-full w-full object-cover object-center"
         />
       </picture>
 
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-espresso/80 via-transparent to-transparent" />
+      {/* Slight gradients: top for the header links, bottom for the button */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-2/5 bg-linear-to-b from-[#241a12]/55 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-linear-to-t from-[#241a12]/65 to-transparent" />
 
-      <motion.div
-        variants={ctaReveal}
-        initial="hidden"
-        animate="show"
-        className="absolute inset-x-0 bottom-0 mx-auto max-w-350 px-6 md:px-10 pb-8 md:pb-16 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-8"
-      >
-        <MagneticLink
-          href="/c/mens-leather-jackets"
-          className="stitch-underline font-mono-label text-[12px] uppercase text-ivory"
-        >
-          Shop men
-        </MagneticLink>
-        <MagneticLink
-          href="/c/womens-leather-jackets"
-          className="stitch-underline font-mono-label text-[12px] uppercase text-ivory/70 hover:text-ivory"
-        >
-          Shop women
-        </MagneticLink>
-      </motion.div>
+      <div className="absolute inset-x-0 bottom-[10svh] md:bottom-[12svh]">
+        <div className="flex justify-center px-6">
+          <Link
+            href="/c/mens-leather-jackets"
+            className="inline-flex items-center gap-3 border border-ivory/80 px-6 py-3 font-display text-[14px] uppercase tracking-wide text-ivory transition-colors duration-200 hover:bg-ivory/15"
+          >
+            Explore Collection
+            <span aria-hidden>→</span>
+          </Link>
+        </div>
+      </div>
     </section>
   );
 }
