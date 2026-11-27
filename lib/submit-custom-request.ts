@@ -16,6 +16,8 @@ export type CustomRequestFields = {
   other_requests?: string;
 };
 
+const GENERIC_ERROR = 'Something went wrong. Please try again, or contact us on WhatsApp.';
+
 export async function submitCustomRequest(fields: CustomRequestFields, files: File[]) {
   const supabase = createSupabaseBrowserClient();
 
@@ -29,8 +31,11 @@ export async function submitCustomRequest(fields: CustomRequestFields, files: Fi
     }),
   });
   const json = await res.json();
-  if (!res.ok || !json.success) throw new Error(json.error || 'Could not create request');
+  if (!res.ok || !json.success) throw new Error(json.error || GENERIC_ERROR);
   const { requestId, requestNumber, uploads } = json.data;
+
+  // no files: the server already saved it as submitted
+  if (files.length === 0) return { requestNumber: requestNumber as string };
 
   // 2. upload files directly to Supabase Storage
   const results = await Promise.all(
@@ -39,13 +44,13 @@ export async function submitCustomRequest(fields: CustomRequestFields, files: Fi
     ),
   );
   const failed = results.find(r => r.error);
-  if (failed?.error) throw new Error('A file failed to upload. Please try again.');
+  if (failed?.error) throw new Error('One of your files could not be uploaded. Please try again.');
 
   // 3. confirm
   const confirmRes = await fetch(`/api/custom-requests/${requestId}/confirm`, { method: 'POST' });
   const confirmJson = await confirmRes.json();
   if (!confirmRes.ok || !confirmJson.success) {
-    throw new Error(confirmJson.error || 'Could not finalise request');
+    throw new Error(GENERIC_ERROR);
   }
 
   return { requestNumber: requestNumber as string };

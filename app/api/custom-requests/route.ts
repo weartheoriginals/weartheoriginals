@@ -1,3 +1,4 @@
+import { isCustomType } from '@/lib/custom-request-types';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -10,43 +11,56 @@ const ALLOWED_TYPES: Record<string, string> = {
   'image/png': 'png',
   'application/pdf': 'pdf',
 };
-const PRODUCT_TYPES = ['leather_jacket', 'bomber', 'trench_coat', 'bag', 'wallet', 'other'];
+const GENERIC_ERROR = 'Something went wrong. Please try again, or contact us on WhatsApp.';
 
 const text = (v: unknown, max: number) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null);
+const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
+  if (!body) return bad(GENERIC_ERROR);
 
   const full_name = text(body.full_name, 120);
   const email = text(body.email, 200);
   const phone = text(body.phone, 40);
 
-  if (!full_name || !email || !phone) {
-    return NextResponse.json({ success: false, error: 'Name, email and phone are required' }, { status: 400 });
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ success: false, error: 'Invalid email' }, { status: 400 });
-  }
-  if (!PRODUCT_TYPES.includes(body.product_type)) {
-    return NextResponse.json({ success: false, error: 'Invalid product type' }, { status: 400 });
-  }
+  if (!full_name || !email || !phone) return bad('Please enter your name, email and phone number.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter a valid email address.');
+  if (!isCustomType(body.product_type)) return bad("Please choose what you'd like customized.");
   if (body.product_type === 'other' && !text(body.product_type_other, 120)) {
-    return NextResponse.json({ success: false, error: 'Please describe the product' }, { status: 400 });
+    return bad('Please describe the product.');
   }
 
   const files: { name: string; type: string; size: number }[] = Array.isArray(body.files) ? body.files : [];
 
-  if (files.length > MAX_FILES) {
-    return NextResponse.json({ success: false, error: `Maximum ${MAX_FILES} files` }, { status: 400 });
-  }
+  if (files.length > MAX_FILES) return bad(`You can upload up to ${MAX_FILES} files.`);
   for (const f of files) {
-    if (!ALLOWED_TYPES[f.type]) {
-      return NextResponse.json({ success: false, error: 'Only JPG, PNG or PDF files are allowed' }, { status: 400 });
-    }
+    if (!ALLOWED_TYPES[f.type]) return bad('Only JPG, PNG or PDF files are allowed.');
     if (!Number.isFinite(f.size) || f.size <= 0 || f.size > MAX_FILE_BYTES) {
-      return NextResponse.json({ success: false, error: 'Each file must be under 5 MB' }, { status: 400 });
+      return bad('Each file must be under 5 MB.');
     }
   }
+
+  const fieldValues = {
+    color: text(body.color, 500),
+    material: text(body.material, 500),
+    patches: text(body.patches, 1000),
+    embroidery: text(body.embroidery, 1000),
+    hardware: text(body.hardware, 500),
+    measurements: text(body.measurements, 1000),
+    other_requests: text(body.other_requests, 3000),
+  };
+  if (files.length === 0 && !Object.values(fieldValues).some(Boolean)) {
+    return bad('Please add at least one detail, a note or a file so we can quote you.');
+  }
+
+  let productId: string | null = null;
+  if (typeof body.product_id === 'string') {
+    const { data: p } = await supabaseAdmin.from('products').select('id').eq('id', body.product_id).maybeSingle();
+    productId = p?.id ?? null;
+  }
+
+  const initialStatus = files.length > 0 ? 'awaiting_files' : 'submitted';
 
   const { data: req, error: reqError } = await supabaseAdmin
     .from('custom_requests')
@@ -55,35 +69,28 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase(),
       phone,
       product_type: body.product_type,
-      product_type_other: text(body.product_type_other, 120),
-      product_id: typeof body.product_id === 'string' ? body.product_id : null,
-      color: text(body.color, 500),
-      material: text(body.material, 500),
-      patches: text(body.patches, 1000),
-      embroidery: text(body.embroidery, 1000),
-      hardware: text(body.hardware, 500),
-      measurements: text(body.measurements, 1000),
-      other_requests: text(body.other_requests, 3000),
-      status: files.length > 0 ? 'awaiting_files' : 'submitted',
+      product_type_other: body.product_type === 'other' ? text(body.product_type_other, 120) : null,
+      product_id: productId,
+      ...fieldValues,
+      status: initialStatus,
     })
     .select('id, request_number')
     .single();
 
   if (reqError || !req) {
-    return NextResponse.json({ success: false, error: reqError?.message ?? 'Failed to create request' }, { status: 500 });
+    console.error('custom request insert failed:', reqError);
+    return bad(GENERIC_ERROR, 500);
   }
 
-  const fail = async (message: string) => {
+  const fail = async (reason: unknown) => {
+    console.error('custom request upload prep failed:', reason);
     await supabaseAdmin.from('custom_requests').delete().eq('id', req.id);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return bad(GENERIC_ERROR, 500);
   };
 
-  await supabaseAdmin
-    .from('custom_request_status_history')
-    .insert({ request_id: req.id, status: files.length > 0 ? 'awaiting_files' : 'submitted' });
+  await supabaseAdmin.from('custom_request_status_history').insert({ request_id: req.id, status: initialStatus });
 
   const uploads: { fileId: string; path: string; token: string }[] = [];
-  const paths: string[] = [];
 
   for (const f of files) {
     const path = `${req.id}/${crypto.randomUUID()}.${ALLOWED_TYPES[f.type]}`;
@@ -91,7 +98,7 @@ export async function POST(request: NextRequest) {
       .from('custom-request-files')
       .createSignedUploadUrl(path);
 
-    if (signError || !signed) return fail('Failed to prepare uploads');
+    if (signError || !signed) return fail(signError);
 
     const { data: fileRow, error: fileError } = await supabaseAdmin
       .from('custom_request_files')
@@ -105,21 +112,13 @@ export async function POST(request: NextRequest) {
       .select('id')
       .single();
 
-    if (fileError || !fileRow) return fail('Failed to prepare uploads');
+    if (fileError || !fileRow) return fail(fileError);
 
-    paths.push(path);
     uploads.push({ fileId: fileRow.id, path, token: signed.token });
   }
 
   return NextResponse.json(
-    {
-      success: true,
-      data: {
-        requestId: req.id,
-        requestNumber: req.request_number,
-        uploads, // browser uploads each file with uploadToSignedUrl(path, token, file)
-      },
-    },
+    { success: true, data: { requestId: req.id, requestNumber: req.request_number, uploads } },
     { status: 201 },
   );
 }

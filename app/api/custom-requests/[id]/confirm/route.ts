@@ -8,7 +8,13 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
 
   const { data: req } = await supabaseAdmin.from('custom_requests').select('id, status').eq('id', id).single();
 
-  if (!req || req.status !== 'awaiting_files') {
+  if (!req) {
+    return NextResponse.json({ success: false, error: 'Request not found' }, { status: 404 });
+  }
+  if (req.status === 'submitted') {
+    return NextResponse.json({ success: true });
+  }
+  if (req.status !== 'awaiting_files') {
     return NextResponse.json({ success: false, error: 'Request not found' }, { status: 404 });
   }
 

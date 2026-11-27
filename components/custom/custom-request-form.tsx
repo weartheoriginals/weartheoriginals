@@ -2,15 +2,7 @@
 
 import { submitCustomRequest, type CustomRequestFields } from '@/lib/submit-custom-request';
 import { useEffect, useMemo, useRef, useState } from 'react';
-
-const PRODUCT_OPTIONS = [
-  { value: 'mens-jackets', label: "Men's Jackets" },
-  { value: 'womens-jackets', label: "Women's Jackets" },
-  { value: 'bags-and-clutches', label: 'Bags & Clutches' },
-  { value: 'vintage-leather', label: 'Vintage Leather' },
-  { value: 'leather-accessories', label: 'Leather Accessories' },
-  { value: 'other', label: 'Other' },
-];
+import { PRODUCT_OPTIONS } from '@/lib/custom-request-types';
 
 const STEPS = [
   { title: 'Product', sub: 'What would you like customized?' },
@@ -32,7 +24,8 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
   const [step, setStep] = useState(0);
   const [maxStep, setMaxStep] = useState(0);
 
-  const [productType, setProductType] = useState('leather_jacket');
+  const [productType, setProductType] = useState('');
+  const [productName, setProductName] = useState('');
   const [productOther, setProductOther] = useState('');
   const [productId, setProductId] = useState<string | undefined>();
 
@@ -65,7 +58,8 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
       .then(json => {
         if (!json?.success) return;
         setProductId(json.data.id);
-        if (json.data.product_type) setProductType(json.data.product_type);
+        setProductName(json.data.name ?? '');
+        if (json.data.product_type) setProductType(t => t || json.data.product_type);
       })
       .catch(() => {});
   }, [initialProductSlug]);
@@ -105,7 +99,27 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
     setFileError('');
   }
 
-  const canContinueStep0 = productType !== 'other' || productOther.trim().length > 0;
+  const hasContent = () => Object.values(details).some(v => v.trim()) || description.trim().length > 0 || files.length > 0;
+
+  function nextFromProduct() {
+    if (!productType) {
+      setError("Please choose what you'd like customized.");
+      return;
+    }
+    if (productType === 'other' && !productOther.trim()) {
+      setError('Please describe the product.');
+      return;
+    }
+    goTo(1);
+  }
+
+  function nextFromUpload() {
+    if (!hasContent()) {
+      setError('Please add at least one detail, a note or a file so we can quote you.');
+      return;
+    }
+    goTo(3);
+  }
 
   const fields: CustomRequestFields = useMemo(
     () => ({
@@ -122,7 +136,15 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!contact.full_name.trim() || !contact.email.trim() || !contact.phone.trim()) {
-      setError('Please fill in your name, email and phone number.');
+      setError('Please enter your name, email and phone number.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!productType || !hasContent()) {
+      setError('Please go back and add at least one detail, a note or a file so we can quote you.');
       return;
     }
     setSubmitting(true);
@@ -131,7 +153,11 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
       const { requestNumber } = await submitCustomRequest(fields, files);
       setSubmittedNumber(requestNumber);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(
+        err instanceof Error && !(err instanceof TypeError)
+          ? err.message
+          : 'Something went wrong. Please try again, or contact us on WhatsApp.',
+      );
     } finally {
       setSubmitting(false);
     }
@@ -186,7 +212,7 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
       </ol>
 
       {/* Step content */}
-      <form onSubmit={handleSubmit} className="min-w-0">
+      <form onSubmit={handleSubmit} noValidate className="min-w-0">
         <p className="lg:hidden font-mono-label text-xs uppercase tracking-widest text-brass mb-4">
           Step {step + 1} of {STEPS.length} · {STEPS[step].title}
         </p>
@@ -195,6 +221,11 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
         {step === 0 && (
           <div>
             <h3 className="font-display text-2xl text-espresso mb-5">1. What would you like customized?</h3>
+            {productName && (
+              <p className="mb-4 text-sm text-umber">
+                <span className="text-espresso">Product:</span> {productName}
+              </p>
+            )}
             <div className="space-y-3">
               {PRODUCT_OPTIONS.map(opt => (
                 <label
@@ -208,7 +239,10 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
                     name="product_type"
                     value={opt.value}
                     checked={productType === opt.value}
-                    onChange={() => setProductType(opt.value)}
+                    onChange={() => {
+                      setProductType(opt.value);
+                      setError('');
+                    }}
                     className="accent-espresso"
                   />
                   <span className="text-base text-espresso">{opt.label}</span>
@@ -232,10 +266,11 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
               </div>
             )}
 
+            {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+
             <button
               type="button"
-              disabled={!canContinueStep0}
-              onClick={() => goTo(1)}
+              onClick={nextFromProduct}
               className="mt-6 inline-flex items-center gap-3 bg-espresso text-ivory font-mono-label text-xs uppercase tracking-widest px-6 py-4 hover:bg-umber transition-colors disabled:opacity-50"
             >
               Next Step <span aria-hidden>→</span>
@@ -395,6 +430,8 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
               </ul>
             )}
 
+            {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+
             <div className="mt-5 bg-espresso/5 p-4 text-sm text-umber leading-relaxed">
               <p className="text-espresso">Please note:</p>
               Uploaded files are references for our design team. Every custom request is reviewed before production. We may
@@ -411,7 +448,7 @@ export default function CustomRequestForm({ initialProductSlug }: { initialProdu
               </button>
               <button
                 type="button"
-                onClick={() => goTo(3)}
+                onClick={nextFromUpload}
                 className="inline-flex items-center gap-3 bg-espresso text-ivory font-mono-label text-xs uppercase tracking-widest px-6 py-4 hover:bg-umber transition-colors"
               >
                 Next Step <span aria-hidden>→</span>

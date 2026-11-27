@@ -1,3 +1,4 @@
+import { isCustomType } from '@/lib/custom-request-types';
 import { getSupabasePublic } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -5,19 +6,29 @@ export async function GET(request: NextRequest) {
   const slug = request.nextUrl.searchParams.get('slug');
   if (!slug) return NextResponse.json({ success: false }, { status: 400 });
 
-  const { data } = await getSupabasePublic()
+  const db = getSupabasePublic();
+
+  const { data: product } = await db
     .from('products')
-    .select('id, category:categories(slug)')
+    .select('id, name, category_id')
     .eq('slug', slug)
     .eq('is_active', true)
-    .single();
+    .maybeSingle();
 
-  if (!data) return NextResponse.json({ success: false }, { status: 404 });
+  if (!product) return NextResponse.json({ success: false }, { status: 404 });
 
-  const category = Array.isArray(data.category) ? data.category[0] : data.category;
+  let productType: string | null = null;
+  let categoryId: string | null = product.category_id;
+
+  for (let i = 0; i < 3 && categoryId && !productType; i++) {
+    const { data: cat } = await db.from('categories').select('custom_type, parent_id').eq('id', categoryId).maybeSingle();
+    if (!cat) break;
+    productType = isCustomType(cat.custom_type) ? cat.custom_type : null;
+    categoryId = cat.parent_id;
+  }
 
   return NextResponse.json({
     success: true,
-    data: { id: data.id, product_type: category?.slug ?? null },
+    data: { id: product.id, name: product.name, product_type: productType },
   });
 }
