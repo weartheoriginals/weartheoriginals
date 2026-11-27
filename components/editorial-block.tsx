@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ZoomReveal from './zoom-reveal';
 
 const BEIGE = 'bg-[#eadfce]';
 
@@ -60,7 +61,9 @@ export default function EditorialBlock({
       }`}
     >
       <div className={`relative h-56 overflow-hidden md:h-auto ${reverse ? 'md:order-2' : ''}`}>
-        <img src={imageUrl} alt={imageAlt ?? title} className="absolute inset-0 h-full w-full object-cover object-center" />
+        <ZoomReveal className="absolute inset-0">
+          <img src={imageUrl} alt={imageAlt ?? title} className="h-full w-full object-cover object-center" />
+        </ZoomReveal>
         <div
           className={`pointer-events-none absolute inset-y-0 hidden w-1/3 md:block ${
             reverse

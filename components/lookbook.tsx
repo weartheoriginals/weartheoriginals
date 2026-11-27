@@ -1,3 +1,5 @@
+import ZoomReveal from './zoom-reveal';
+
 export type LookbookImage = { id: string; image_url: string };
 
 export default function Lookbook({ images }: { images: LookbookImage[] }) {
@@ -7,12 +9,14 @@ export default function Lookbook({ images }: { images: LookbookImage[] }) {
     <section className="relative w-full overflow-hidden bg-espresso">
       <div className="shelf-scroll flex overflow-x-auto overscroll-x-contain">
         {images.map(image => (
-          <div key={image.id} className="w-full shrink-0 snap-start shelf-item">
-            <img
-              src={image.image_url}
-              alt="OGNLS lookbook"
-              className="block w-full h-[40svh] md:h-[65svh] object-cover object-center"
-            />
+          <div key={image.id} className="w-full shrink-0 snap-start shelf-item overflow-hidden">
+            <ZoomReveal>
+              <img
+                src={image.image_url}
+                alt="OGNLS lookbook"
+                className="block w-full h-[40svh] md:h-[65svh] object-cover object-center"
+              />
+            </ZoomReveal>
           </div>
         ))}
       </div>

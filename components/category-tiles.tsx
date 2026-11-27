@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ZoomReveal from './zoom-reveal';
 
 export type CategoryTile = {
   name: string;
@@ -19,11 +20,9 @@ export default function CategoryTiles({ categories }: { categories: CategoryTile
             className="shelf-item relative block aspect-4/5 w-[62%] shrink-0 overflow-hidden bg-umber/10 sm:w-[40%] md:w-[calc((100%-3rem)/5)]"
           >
             {category.image_url && (
-              <img
-                src={category.image_url}
-                alt={category.name}
-                className="absolute inset-0 h-full w-full object-cover object-center"
-              />
+              <ZoomReveal className="absolute inset-0">
+                <img src={category.image_url} alt={category.name} className="h-full w-full object-cover object-center" />
+              </ZoomReveal>
             )}
 
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-[#2b1608]/85 to-transparent" />

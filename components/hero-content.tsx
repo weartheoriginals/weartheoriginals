@@ -1,16 +1,19 @@
 import Link from 'next/link';
+import ZoomReveal from './zoom-reveal';
 
 export default function HeroContent({ imageUrl, mobileImageUrl }: { imageUrl: string; mobileImageUrl: string | null }) {
   return (
     <section className="relative w-full h-svh overflow-hidden bg-espresso">
-      <picture>
-        <source media="(min-width: 768px)" srcSet={imageUrl} />
-        <img
-          src={mobileImageUrl ?? imageUrl}
-          alt="OGNLS leather collection"
-          className="block h-full w-full object-cover object-center"
-        />
-      </picture>
+      <ZoomReveal className="h-full w-full">
+        <picture>
+          <source media="(min-width: 768px)" srcSet={imageUrl} />
+          <img
+            src={mobileImageUrl ?? imageUrl}
+            alt="OGNLS leather collection"
+            className="block h-full w-full object-cover object-center"
+          />
+        </picture>
+      </ZoomReveal>
 
       {/* Slight gradients: top for the header links, bottom for the button */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-2/5 bg-linear-to-b from-[#241a12]/55 to-transparent" />
