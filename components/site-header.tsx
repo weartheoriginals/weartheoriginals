@@ -97,7 +97,7 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
                 alt="Wear The Originals"
                 width={552}
                 height={198}
-                className={`w-auto transition-[height] duration-300 ease-in-out ${scrolled ? 'h-7 md:h-8' : 'h-9 md:h-11'}`}
+                className={`w-auto transition-[height] duration-300 ease-in-out ${scrolled ? 'h-11 md:h-14' : 'h-14 md:h-20'}`}
                 priority
               />
             </Link>
