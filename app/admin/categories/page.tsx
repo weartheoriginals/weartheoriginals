@@ -4,10 +4,19 @@ import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import type { CategoryWithParent } from '@/lib/types';
 import { uploadToProductImagesBucket } from '@/lib/upload-image';
 import { useEffect, useState } from 'react';
+import { PRODUCT_OPTIONS } from '@/lib/custom-request-types';
 
 type ModalMode = 'add' | 'edit' | null;
 
-const emptyForm = { name: '', slug: '', parent_id: '', image_url: '', hero_copy: '', hero_image_alt: '' };
+const emptyForm = {
+  name: '',
+  slug: '',
+  parent_id: '',
+  image_url: '',
+  hero_copy: '',
+  hero_image_alt: '',
+  custom_type: '',
+};
 
 async function authHeaders() {
   const supabase = createSupabaseBrowserClient();
@@ -82,7 +91,9 @@ export default function AdminCategoriesPage() {
       image_url: cat.image_url ?? '',
       hero_copy: cat.hero_copy ?? '',
       hero_image_alt: cat.hero_image_alt ?? '',
+      custom_type: (cat as CategoryWithParent & { custom_type?: string | null }).custom_type ?? '',
     });
+
     setEditingCat(cat);
     setError('');
     setImageFile(null);
@@ -138,6 +149,7 @@ export default function AdminCategoriesPage() {
       image_url,
       hero_copy: form.hero_copy.trim() || null,
       hero_image_alt: form.hero_image_alt.trim() || null,
+      custom_type: form.custom_type || null,
     };
 
     const headers = await authHeaders();
@@ -319,7 +331,28 @@ export default function AdminCategoriesPage() {
               </div>
 
               <div>
-                <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">Image</label>
+                <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">
+                  Custom request type
+                </label>
+                <select
+                  value={form.custom_type}
+                  onChange={e => setForm(f => ({ ...f, custom_type: e.target.value }))}
+                  className="w-full border border-(--hairline) bg-ivory px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-saddle"
+                >
+                  <option value="">None (use the parent's)</option>
+                  {PRODUCT_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-umber mt-1">
+                  Preselects this type when a customer requests a customization from a product in this category.
+                </p>
+              </div>
+
+              <div>
+                <label className="font-mono-label block text-xs uppercase tracking-wider text-umber mb-2">Image</label>{' '}
                 <div
                   className="border border-dashed border-(--hairline) cursor-pointer min-h-25 flex items-center justify-center overflow-hidden hover:border-saddle transition-colors"
                   onClick={() => document.getElementById('cat-image-upload')?.click()}

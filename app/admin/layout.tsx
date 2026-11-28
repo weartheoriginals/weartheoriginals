@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/admin' },
   { label: 'Orders', href: '/admin/orders' },
+  { label: 'Custom Requests', href: '/admin/custom-requests' },
   { label: 'Products', href: '/admin/products' },
   { label: 'Categories', href: '/admin/categories' },
   { label: 'Banner', href: '/admin/banner' },
