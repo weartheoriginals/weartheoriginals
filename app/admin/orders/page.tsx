@@ -120,7 +120,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   return (
     <div className="flex justify-between gap-4 py-1.5 text-sm">
       <span className="text-umber capitalize shrink-0">{label}</span>
-      <span className="text-espresso text-right break-words min-w-0">{children}</span>
+      <span className="text-espresso text-right wrap-break-word min-w-0">{children}</span>
     </div>
   );
 }
