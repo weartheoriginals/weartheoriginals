@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       display_order: body.display_order ?? display_order,
       hero_copy: body.hero_copy?.trim() || null,
       hero_image_alt: body.hero_image_alt?.trim() || null,
+      custom_type: body.custom_type || null,
     })
     .select()
     .single();
